@@ -4,7 +4,7 @@ import {faTwitter, faWhatsapp} from "@fortawesome/free-brands-svg-icons"
 
 const About = () => {
   return (
-    <div className="pt-8 px-3 flex flex-col gap-3 justify-center">
+    <div className="pt-8 px-3 flex flex-col gap-3 justify-center ash_gradient">
 
         <div className="text-[16px] flex flex-col gap-2 text-start">
             <p>
