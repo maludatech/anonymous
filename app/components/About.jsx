@@ -4,9 +4,9 @@ import {faTwitter, faWhatsapp} from "@fortawesome/free-brands-svg-icons"
 
 const About = () => {
   return (
-    <div className="pt-8 px-3 flex flex-col gap-3 justify-center ash_gradient">
+    <div className="pt-8 px-3 flex flex-col gap-3 justify-center">
 
-        <div className="text-[16px] flex flex-col gap-2 text-start">
+        <div className="text-[16px] flex flex-col gap-2 text-start ash_gradient">
             <p>
             Maluda's Anonymous is more than just a platform; it's a safe haven for expression, a sanctuary for voices that prefer the comfort of anonymity. Our mission is to provide individuals with a judgment-free space to share their thoughts, feelings, and experiences without fear or hesitation.
             </p>
@@ -16,18 +16,18 @@ const About = () => {
         </div>
       
         <div className="flex flex-col gap-2">
-            <h3 className="text-xl font-semibold">Contact Us:</h3>
-            <p className="text-[16px] pb-3">We value your feedback and are here to assist you. Feel free to reach out to us through the following channels:</p>
+            <h3 className="text-xl font-semibold ash_gradient">Contact Us:</h3>
+            <p className="text-[16px] pb-3 ash_gradient">We value your feedback and are here to assist you. Feel free to reach out to us through the following channels:</p>
       
             <div className="flex flex-col gap-1 text-[16px]">
-                <p>Email <FontAwesomeIcon icon={faEnvelope}/>: maludatech@gmail.com</p>
-                <p>WhatsApp <FontAwesomeIcon icon={faWhatsapp}/>: +234 816 388 7385</p>
-                <p>Twitter <FontAwesomeIcon icon={faTwitter}/>: @Maludatech</p>
+                <p className="text-gray-500">Email <FontAwesomeIcon icon={faEnvelope}/>: maludatech@gmail.com</p>
+                <p className="text-gray-500">WhatsApp <FontAwesomeIcon icon={faWhatsapp}/>: +234 816 388 7385</p>
+                <p className="text-gray-500">Twitter <FontAwesomeIcon icon={faTwitter}/>: @Maludatech</p>
             </div>
       
         </div>
 
-      <p className="text-[16px] mt-4">
+      <p className="text-[16px] mt-4 ash_gradient">
         Thank you for being a part of Maluda's Anonymous, where your voice matters, and your identity remains protected.
       </p>
     </div>
