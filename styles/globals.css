@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 0, 0, 0;
+  --background-end-rgb: 0, 0, 0;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+.gray_gradient {
+  @apply bg-gradient-to-r from-gray-300 to-gray-500 bg-clip-text text-transparent;
+}
+.white_gradient {
+  @apply bg-gradient-to-r from-gray-400 to-gray-100 bg-clip-text text-transparent;
+}
+.ash_gradient {
+  @apply bg-gradient-to-r from-gray-500 to-gray-300 bg-clip-text text-transparent;
+}
+
+.dropdown {
+  @apply absolute right-0 top-full mt-3 w-fit mr-2 p-5 rounded-lg bg-white min-w-[150px] flex flex-col gap-2 justify-end items-end;
+}
+
+.glassmorphism {
+  @apply rounded-xl border border-gray-500 bg-white/20 shadow-[inset_10px_-50px_94px_0_rgb(199,199,199,0.2)] backdrop-blur p-5;
+}
+.glassmorphism_dark {
+  @apply rounded-xl border border-gray-500 bg-slate-900 shadow-[inset_10px_-50px_94px_0_rgb(199,199,199,0.2)] backdrop-blur p-5;
+}
+
+.black_btn {
+  @apply rounded-full border border-black bg-black py-1.5 px-5 text-white transition-all hover:bg-white hover:text-black text-center text-sm font-inter flex items-center justify-center;
+}
+
+.outline_btn {
+  @apply rounded-full border border-black bg-transparent py-1.5 px-5 text-black transition-all hover:bg-black hover:text-white text-center text-sm font-inter flex items-center justify-center;
+}
