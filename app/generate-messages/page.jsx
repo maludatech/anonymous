@@ -24,7 +24,7 @@ const GenerateMessage = () => {
 
   useEffect(() => {
     if (user) {
-      setText(`http://localhost:3000/send-message/${user.username}`);
+      setText(`https://anonymous-eta.vercel.app/send-message/${user.username}`);
     }
   }, [user]);
 
