@@ -12,14 +12,14 @@ export const PATCH = async (req: Request) => {
   try {
     await connectToDb();
 
-    // Hash and salt the new password before updating
     const hashedPassword = await bcrypt.hash(password, 10);
-    // Update the user's document in the database
+
     const updatedUser = await User.findOneAndUpdate(
       { email: email },
       { password: hashedPassword },
       { new: true }
     );
+
     // Generate a new JWT token with updated user information
     const token = jwt.sign(
       {
@@ -27,7 +27,7 @@ export const PATCH = async (req: Request) => {
         email: updatedUser.email,
         username: updatedUser.username,
       },
-      process.env.SECRET_KEY,
+      process.env.SECRET_KEY as string,
       { expiresIn: "3d" }
     );
 

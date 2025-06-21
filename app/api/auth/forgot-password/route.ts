@@ -4,25 +4,8 @@ import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
 import { sendResetEmail } from "@/lib/sendResetEmail";
-import rateLimit from "next-rate-limit";
-
-const limiter = rateLimit({
-  interval: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-});
 
 export async function POST(request: Request) {
-  const { success, limit, remaining, reset } = limiter(request);
-
-  if (!success) {
-    return NextResponse.json(
-      {
-        message: `Rate limit exceeded. Try again after ${new Date(reset).toLocaleTimeString()}.`,
-      },
-      { status: 429 }
-    );
-  }
-
   try {
     await connectToDb();
     const { email } = await request.json();
