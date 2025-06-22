@@ -43,7 +43,13 @@ export const POST = async (request: NextRequest) => {
       { expiresIn: "3d" }
     );
 
-    return NextResponse.json({ token }, { status: 200 });
+    return NextResponse.json(
+      {
+        token,
+        user: { email: existingUser.email, username: existingUser.username },
+      },
+      { status: 200 }
+    );
   } catch (error: any) {
     return NextResponse.json(
       { message: "Internal Server Error" },
