@@ -50,20 +50,22 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Call backend API to authenticate
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
+
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Sign-in failed");
+        toast.error(data.message || "Sign-in failed");
+        return;
       }
-      const user = await response.json();
+
       login({
-        email: user.email,
-        username: user.username,
+        email: data.email,
+        username: data.username,
       });
       toast.success("Signed in successfully!");
       router.push(callbackUrl);

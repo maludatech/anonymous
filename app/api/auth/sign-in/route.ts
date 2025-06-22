@@ -1,31 +1,41 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import User from "@/models/Users";
 import { connectToDb } from "@/lib/database";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-export const POST = async (req: Request) => {
-  const data = await req.json();
-  const { email, password } = data;
-
+export const POST = async (request: NextRequest) => {
   try {
-    await connectToDb();
-    const existingUser = await User.findOne({ email: email });
+    const data = await request.json();
+    const { email, password } = data;
 
-    if (!existingUser) {
-      return new Response(JSON.stringify({ message: "Invalid email" }), {
-        status: 401,
-      });
+    console.log("password:", password);
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: "Email and password are required" },
+        { status: 400 }
+      );
     }
 
+    await connectToDb();
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    if (!existingUser) {
+      console.log(`No user found for email: ${email.toLowerCase()}`);
+      return NextResponse.json({ message: "Invalid email" }, { status: 401 });
+    }
+
+    console.log(`Comparing password for user: ${existingUser.email}`);
     const passwordMatch = await bcrypt.compare(password, existingUser.password);
 
+    console.log("existing password: ", existingUser.password);
+
     if (!passwordMatch) {
+      console.log(`Password mismatch for user: ${existingUser.email}`);
       return NextResponse.json(
         { message: "Invalid password" },
-        {
-          status: 401,
-        }
+        { status: 401 }
       );
     }
 
@@ -35,21 +45,17 @@ export const POST = async (req: Request) => {
         userId: existingUser._id,
         email: existingUser.email,
         username: existingUser.username,
-        fullName: existingUser.fullName,
-        countryOfResidence: existingUser.countryOfResidence,
       },
-      "your-secret-key",
+      process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD",
       { expiresIn: "3d" }
     );
 
     return NextResponse.json({ token }, { status: 200 });
-  } catch (error) {
-    console.error("Error during sign-in:", error);
+  } catch (error: any) {
+    console.error("Error during sign-in:", error.message);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 };

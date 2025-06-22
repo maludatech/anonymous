@@ -15,6 +15,7 @@ const passwordResetTokenSchema = new Schema(
       type: Date,
       required: true,
       index: { expires: "1h" },
+    },
   },
   { timestamps: true }
 );

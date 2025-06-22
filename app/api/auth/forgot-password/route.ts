@@ -1,15 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import User from "@/models/Users";
 import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
-import { sendResetEmail } from "@/lib/sendResetEmail";
+import { sendResetEmail } from "@/lib/email";
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
   try {
     await connectToDb();
-    const { email } = await request.json();
+    const { email } = await req.json();
     const user = await User.findOne({ email: email.toLowerCase() });
+
     if (!user) {
       return NextResponse.json(
         { message: "If an account exists, a reset email has been sent." },

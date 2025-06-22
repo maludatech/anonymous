@@ -25,8 +25,12 @@ const formSchema = z.object({
   username: z
     .string()
     .min(4, "Username must be at least 4 characters")
-    .max(20, "Username must be less than 20 characters"),
-  email: z.string().email("Invalid email address"),
+    .max(20, "Username must be less than 20 characters")
+    .regex(/^[a-zA-Z0-9]+$/, "Username: alphanumeric characters only"),
+  email: z
+    .string()
+    .email("Invalid email address")
+    .regex(/^\S+@\S+\.\S+$/, "Invalid email format"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
@@ -55,12 +59,21 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Simulate API call (replace with your actual API integration)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("Account created successfully!");
-      router.push(callbackUrl);
+      const response = await fetch("/api/auth/sign-up", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) {
+        const errorData: any = await response.json();
+        toast.error(errorData.message || "Failed to create account");
+      } else {
+        toast.success("Account created successfully!");
+        router.push("/sign-in");
+      }
     } catch (error) {
-      console.error("Sign-up error:", error);
       toast.error("Failed to create account. Please try again.");
     } finally {
       setIsSubmitting(false);

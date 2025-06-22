@@ -103,7 +103,7 @@ export default function ForgotPasswordForm({
             />
             <Button
               type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Sending..." : "Send Reset Email"}

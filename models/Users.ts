@@ -30,30 +30,6 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
-// Pre-save hook to hash password
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 10);
-  next();
-});
-
-// Method to compare passwords
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-) {
-  return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// Case-insensitive index for email and username
-userSchema.index(
-  { email: 1 },
-  { unique: true, collation: { locale: "en", strength: 2 } }
-);
-userSchema.index(
-  { username: 1 },
-  { unique: true, collation: { locale: "en", strength: 2 } }
-);
-
 const User = models.User || model("User", userSchema);
 
 export default User;

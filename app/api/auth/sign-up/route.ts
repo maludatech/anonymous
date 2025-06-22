@@ -1,16 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
+import { sendWelcomeEmail } from "@/lib/email";
 
-export const POST = async (req: Request) => {
+export async function POST(request: NextRequest) {
   try {
-    const data = await req.json();
+    const data = await request.json();
 
     if (!data) {
-      return new Response(JSON.stringify({ message: "Invalid request data" }), {
-        status: 400,
-      });
+      return NextResponse.json(
+        { message: "Invalid request data" },
+        { status: 400 }
+      );
     }
 
     const { email, password, username } = data;
@@ -18,35 +20,49 @@ export const POST = async (req: Request) => {
     await connectToDb();
 
     const existingUser = await User.findOne({
-      email: email,
-      username: username,
+      username: username.toLowerCase(),
     });
 
     if (existingUser) {
-      return new Response(JSON.stringify({ message: "User already exists" }), {
-        status: 400,
-      });
+      return NextResponse.json(
+        { message: "Username already exists, please choose another one" },
+        { status: 400 }
+      );
+    }
+
+    const existingEmail = await User.findOne({ email: email.toLowerCase() });
+
+    if (existingEmail) {
+      return NextResponse.json(
+        { message: "Email already exists, please sign in" },
+        { status: 400 }
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      email: email,
-      username: username,
+      email: email.toLowerCase(),
+      username: username.toLowerCase(),
       password: hashedPassword,
     });
     await newUser.save();
 
+    // Send welcome email
+    await sendWelcomeEmail(email, username);
+
     return NextResponse.json(
-      { message: "Account created successfully" },
+      {
+        message: "Account created successfully",
+        user: { email: newUser.email, username: newUser.username },
+      },
       { status: 201 }
     );
   } catch (error: any) {
+    console.error("Sign-up error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
-      {
-        status: 500,
-      }
+      { message: "Internal Server Error" },
+      { status: 500 }
     );
   }
-};
+}
