@@ -1,10 +1,11 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { User, Mail, Lock } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -20,7 +21,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/useAuthStore";
 
-// Define form schema with zod
 const formSchema = z.object({
   username: z
     .string()
@@ -36,6 +36,7 @@ const formSchema = z.object({
 
 export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
 
@@ -45,7 +46,6 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     }
   }, [isAuthenticated, router]);
 
-  // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -55,7 +55,6 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
     },
   });
 
-  // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
@@ -139,11 +138,19 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        className="pl-10 bg-background text-foreground border-input focus:ring-ring"
+                        className="pl-10 pr-10 bg-background text-foreground border-input focus:ring-ring"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground hover:cursor-pointer"
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -154,6 +161,7 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
               disabled={isSubmitting}
+              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               {isSubmitting ? "Signing Up..." : "Sign Up"}
             </Button>

@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -29,6 +29,7 @@ const formSchema = z.object({
 
 export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { login, isAuthenticated } = useAuthStore();
 
@@ -118,11 +119,25 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
-                        className="pl-10 bg-background text-foreground border-input focus:ring-ring"
+                        className="pl-10 pr-10 bg-background text-foreground border-input focus:ring-ring"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground hover:cursor-pointer"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />

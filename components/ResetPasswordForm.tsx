@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Lock } from "lucide-react";
+import { Lock, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -39,6 +39,8 @@ export default function ResetPasswordForm({
   callbackUrl: string;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
@@ -100,6 +102,7 @@ export default function ResetPasswordForm({
           <Button
             asChild
             className="bg-primary text-primary-foreground hover:bg-primary/90"
+            style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
           >
             <Link href="/forgot-password">Request Another Link</Link>
           </Button>
@@ -132,11 +135,25 @@ export default function ResetPasswordForm({
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="Enter new password"
-                        className="pl-10 bg-background text-foreground border-input focus:ring-ring"
+                        className="pl-10 pr-10 bg-background text-foreground border-input focus:ring-ring"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground hover:cursor-pointer"
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -155,11 +172,29 @@ export default function ResetPasswordForm({
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                       <Input
-                        type="password"
+                        type={showConfirmPassword ? "text" : "password"}
                         placeholder="Confirm new password"
-                        className="pl-10 bg-background text-foreground border-input focus:ring-ring"
+                        className="pl-10 pr-10 bg-background text-foreground border-input focus:ring-ring"
                         {...field}
                       />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground hover:cursor-pointer"
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide password"
+                            : "Show password"
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-5 w-5" />
+                        ) : (
+                          <Eye className="h-5 w-5" />
+                        )}
+                      </button>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -170,6 +205,7 @@ export default function ResetPasswordForm({
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={isSubmitting}
+              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               {isSubmitting ? "Resetting..." : "Reset Password"}
             </Button>
