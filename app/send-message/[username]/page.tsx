@@ -1,3 +1,4 @@
+// app/send-message/[username]/page.tsx
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connectToDb } from "@/lib/database";
@@ -9,18 +10,24 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-  params: { username: string };
-  searchParams: { callbackUrl?: string };
+  params: Promise<{ username: string }>;
+  searchParams: Promise<{ callbackUrl?: string }>;
 }
 
 export default async function Page({ params, searchParams }: Props) {
-  const { username } = params;
-  const { callbackUrl } = searchParams;
+  const { username } = await params;
+  const { callbackUrl } = await searchParams;
+
+  if (!username) {
+    console.error("Missing username in params:", params);
+    notFound();
+  }
 
   await connectToDb();
   const user = await User.findOne({ username: username.toLowerCase() });
 
   if (!user) {
+    console.log(`User not found for username: ${username.toLowerCase()}`);
     notFound();
   }
 
