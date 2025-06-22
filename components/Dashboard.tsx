@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "sonner";
@@ -18,16 +18,17 @@ interface Message {
 }
 
 const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, token } = useAuthStore();
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [link, setLink] = useState("");
   const [copyText, setCopyText] = useState("Copy");
   const [loading, setLoading] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !user || !token) {
       toast.error("Please sign in to access your dashboard.");
       router.push(callbackUrl);
     } else {
@@ -36,19 +37,22 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
       );
       fetchMessages();
     }
-  }, [user, isAuthenticated, router]);
+  }, [user, isAuthenticated, token, router, callbackUrl]);
 
   // Fetch messages
   const fetchMessages = async () => {
     if (!user?.username) return;
     setLoading(true);
     try {
-      const response = await fetch(`/api/messages/${user.username}`);
+      const response = await fetch(`/api/messages/${user.username}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
       } else {
-        toast.error("Failed to fetch messages.");
+        const error = await response.json();
+        toast.error(error.message || "Failed to fetch messages.");
       }
     } catch (error) {
       toast.error("Error fetching messages.");
@@ -59,34 +63,54 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
   };
 
   // Delete message
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      if (deletingIds.has(messageId)) return;
+      setDeletingIds((prev) => new Set(prev).add(messageId));
 
-  const deleteMessage = async (messageId: string) => {
-    try {
-      const token = useAuthStore.getState().token;
-      if (!token) {
-        toast.error("Please sign in again.");
-        router.push("/sign-in");
-        return;
-      }
+      // Optimistic update
+      const previousMessages = messages;
+      setMessages(messages.filter((msg) => msg._id !== messageId));
 
-      const response = await fetch(`/api/messages/delete/${messageId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.ok) {
-        setMessages(messages.filter((msg) => msg._id !== messageId));
+      try {
+        if (!token) {
+          toast.error("Session expired. Please sign in again.");
+          router.push("/sign-in");
+          setMessages(previousMessages); // Revert optimistic update
+          return;
+        }
+
+        const response = await fetch(`/api/messages/delete/${messageId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || "Failed to delete message");
+        }
+
         toast.success("Message deleted successfully.");
-      } else {
-        const error = await response.json();
+      } catch (error: any) {
+        console.error("Delete message error:", {
+          messageId,
+          message: error.message,
+          stack: error.stack,
+        });
         toast.error(error.message || "Failed to delete message.");
+        setMessages(previousMessages); // Revert optimistic update
+      } finally {
+        setDeletingIds((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
       }
-    } catch (error) {
-      toast.error("Error deleting message.");
-      console.error("Delete message error:", error);
-    }
-  };
+    },
+    [messages, token, router, deletingIds]
+  );
 
   // Copy link
   const handleCopy = async () => {
@@ -172,7 +196,8 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteMessage(message._id)}
-                        className="text-muted-foreground hover:text-destructive"
+                        className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
+                        disabled={deletingIds.has(message._id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
