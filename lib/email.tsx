@@ -12,14 +12,20 @@ export async function sendResetEmail(email: string, resetUrl: string) {
       { pretty: true }
     );
 
-    await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@your-domain.com>",
+    const response = await resend.emails.send({
+      from: "Maluda Anonymous <no-reply@polomalbullish-remi.com>",
       to: email,
       subject: "Maluda Anonymous - Password Reset",
       html: emailHtml,
     });
-  } catch (error) {
-    console.error("Reset email error:", error);
+
+    return response;
+  } catch (error: any) {
+    console.error("Reset email error:", {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data,
+    });
     throw new Error("Failed to send reset email");
   }
 }
@@ -32,7 +38,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
     );
 
     await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@your-domain.com>",
+      from: "Maluda Anonymous <no-reply@polomalbullish-remi.com>",
       to: email,
       subject: "Welcome to Maluda Anonymous!",
       html: emailHtml,
