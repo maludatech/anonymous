@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Copy, X } from "lucide-react";
+import { Trash2, Copy, Share2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
@@ -79,7 +79,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
 
       const previousMessages = messages;
       setMessages(messages.filter((msg) => msg._id !== messageId));
-      setOpenDialogId(null); // Close dialog if open
+      setOpenDialogId(null);
 
       try {
         if (!token) {
@@ -91,9 +91,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
 
         const response = await fetch(`/api/messages/delete/${messageId}`, {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         if (!response.ok) {
@@ -134,6 +132,18 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
     }
   };
 
+  // Share to X
+  const handleShare = (message: string) => {
+    const shareText = `Received an anonymous message: "${truncateMessage(
+      message,
+      100
+    )}" via Maluda Anonymous!`;
+    const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+      shareText
+    )}&url=${encodeURIComponent(link)}`;
+    window.open(shareUrl, "_blank");
+  };
+
   // Format timestamp
   const formatTime = (date: string) => {
     try {
@@ -158,7 +168,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
     <section className="flex flex-col min-h-screen pt-24 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-4xl mx-auto w-full">
         {/* Header */}
-        <Card className="mb-6 bg-card border border-border rounded-lg shadow-lg animate-slide-in">
+        <Card className="mb-6 bg-card border border-border rounded-lg shadow-lg animate-in slide-in-from-top">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground font-poppins">
               Welcome, {user?.username || "User"}! 🤞
@@ -174,12 +184,10 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                 value={link}
                 readOnly
                 className="bg-input text-foreground border-border rounded-md p-2 flex-1"
-                style={{ borderColor: "oklch(0.55 0.19 265.5)" }}
               />
               <Button
                 onClick={handleCopy}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-md p-2 flex items-center gap-2 hover:cursor-pointer"
-                style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
               >
                 <Copy className="w-4 h-4" /> {copyText}
               </Button>
@@ -192,11 +200,19 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-md" />
+                <Skeleton key={i} className="h-32 w-full rounded-lg" />
               ))}
             </div>
           ) : messages.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
+              <div className="col-span-full flex items-center gap-2 mb-2">
+                <h2 className="text-xl font-bold text-foreground">
+                  Your Inbox 📬
+                </h2>
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {messages.length}
+                </span>
+              </div>
               {messages.map((message) => (
                 <Dialog
                   key={message._id}
@@ -207,19 +223,35 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                 >
                   <DialogTrigger asChild>
                     <Card
-                      className="bg-card border-border rounded-md shadow-md animate-fade-in hover:cursor-pointer hover:bg-background/5"
+                      className="bg-card border-border rounded-lg shadow-md animate-in zoom-in duration-300 hover:cursor-pointer hover:bg-background/5 hover:shadow-lg transition-all"
                       aria-label="View full message"
                     >
-                      <CardContent className="p-4 flex flex-col gap-2">
+                      <CardContent className="p-4 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-semibold text-foreground">
-                            Anonymous Message
-                          </h3>
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className="w-5 h-5 text-muted-foreground"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                            <h3 className="text-lg font-semibold text-primary">
+                              Anonymous Message
+                            </h3>
+                          </div>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={(e) => {
-                              e.stopPropagation(); // Prevent dialog from opening
+                              e.stopPropagation();
                               deleteMessage(message._id);
                             }}
                             className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
@@ -238,45 +270,39 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                       </CardContent>
                     </Card>
                   </DialogTrigger>
-                  <DialogContent className="bg-card border-border rounded-lg shadow-lg animate-in fade-in duration-300 max-w-md p-0">
-                    <Card className="border-0 shadow-none m-4">
-                      <CardContent className="p-4 flex flex-col gap-2">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-semibold text-foreground">
-                            Anonymous Message
-                          </h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              deleteMessage(message._id);
-                              setOpenDialogId(null);
-                            }}
-                            className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
-                            disabled={deletingIds.has(message._id)}
-                            aria-label="Delete message"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p className="text-foreground">{message.message}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatTime(message.createdAt)}
-                        </p>
-                      </CardContent>
-                    </Card>
+                  <DialogContent className="bg-card border-border rounded-lg shadow-lg animate-in zoom-in duration-300 max-w-md p-4">
+                    <DialogHeader>
+                      <DialogTitle className="text-primary">
+                        Anonymous Message
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-3">
+                      <p className="text-foreground">{message.message}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatTime(message.createdAt)}
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShare(message.message)}
+                        className="mt-2 text-foreground border-border hover:bg-background/10"
+                      >
+                        <Share2 className="w-4 h-4 mr-2" />
+                        Share to X
+                      </Button>
+                    </div>
                   </DialogContent>
                 </Dialog>
               ))}
             </div>
           ) : (
-            <Card className="bg-card border-border rounded-md shadow-md text-center p-6 animate-fade-in">
+            <Card className="bg-card border-border rounded-lg shadow-md text-center p-6 animate-in zoom-in">
               <CardContent>
                 <p className="text-xl font-semibold text-foreground">
-                  No secret messages yet!
+                  No secret messages yet! 📬
                 </p>
                 <p className="text-muted-foreground">
-                  Share your link above to start receiving anonymous messages.
+                  Share your link to hear from your secret admirers! 💌
                 </p>
               </CardContent>
             </Card>
