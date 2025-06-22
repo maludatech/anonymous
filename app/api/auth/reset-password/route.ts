@@ -3,13 +3,22 @@ import User from "@/models/Users";
 import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
-import bcrypt from "bcryptjs";
+import { hash } from "@node-rs/argon2";
 
 export async function POST(request: Request) {
   try {
     await connectToDb();
     const { email, token, password } = await request.json();
+
+    if (!email || !token || !password) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() });
+
     if (!user) {
       return NextResponse.json(
         { message: "Invalid reset link" },
@@ -25,6 +34,7 @@ export async function POST(request: Request) {
     });
 
     if (!resetToken) {
+      console.log(`Invalid or expired token for user: ${email.toLowerCase()}`);
       return NextResponse.json(
         { message: "Invalid or expired reset link" },
         { status: 400 }
@@ -32,7 +42,12 @@ export async function POST(request: Request) {
     }
 
     // Update password
-    user.password = await bcrypt.hash(password, 10);
+    user.password = await hash(password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
     await user.save();
 
     // Invalidate token
@@ -43,6 +58,6 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error: any) {
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }
