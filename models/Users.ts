@@ -1,6 +1,4 @@
-// models/Users.ts
 import { Schema, model, models } from "mongoose";
-import bcrypt from "bcryptjs";
 
 const userSchema = new Schema(
   {
@@ -8,9 +6,9 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Email is required"],
       unique: true,
-      lowercase: true, // Normalize to lowercase
+      lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, "Invalid email format"], // Basic email validation
+      match: [/^\S+@\S+\.\S+$/, "Invalid email format"],
     },
     password: {
       type: String,
@@ -24,7 +22,7 @@ const userSchema = new Schema(
       trim: true,
       minlength: [4, "Username must be at least 4 characters"],
       maxlength: [20, "Username must be less than 20 characters"],
-      match: [/^[a-zA-Z0-9]+$/, "Username: alphanumeric characters only"], // Alphanumeric
+      match: [/^[a-zA-Z0-9]+$/, "Username: alphanumeric characters only"],
     },
   },
   { timestamps: true }

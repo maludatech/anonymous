@@ -1,4 +1,3 @@
-// models/Messages.ts
 import { Schema, model, models } from "mongoose";
 
 const messageSchema = new Schema(
