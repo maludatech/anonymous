@@ -1,3 +1,4 @@
+// app/components/Dashboard.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -8,8 +9,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Copy } from "lucide-react";
+import { Trash2, Copy, X } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Message {
   _id: string;
@@ -25,6 +33,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
   const [copyText, setCopyText] = useState("Copy");
   const [loading, setLoading] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [openDialogId, setOpenDialogId] = useState<string | null>(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -68,15 +77,15 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
       if (deletingIds.has(messageId)) return;
       setDeletingIds((prev) => new Set(prev).add(messageId));
 
-      // Optimistic update
       const previousMessages = messages;
       setMessages(messages.filter((msg) => msg._id !== messageId));
+      setOpenDialogId(null); // Close dialog if open
 
       try {
         if (!token) {
           toast.error("Session expired. Please sign in again.");
           router.push("/sign-in");
-          setMessages(previousMessages); // Revert optimistic update
+          setMessages(previousMessages);
           return;
         }
 
@@ -100,7 +109,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
           stack: error.stack,
         });
         toast.error(error.message || "Failed to delete message.");
-        setMessages(previousMessages); // Revert optimistic update
+        setMessages(previousMessages);
       } finally {
         setDeletingIds((prev) => {
           const newSet = new Set(prev);
@@ -137,6 +146,12 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
     } catch {
       return "Invalid date";
     }
+  };
+
+  // Truncate message
+  const truncateMessage = (message: string, maxLength: number = 50) => {
+    if (message.length <= maxLength) return message;
+    return message.slice(0, maxLength) + "...";
   };
 
   return (
@@ -181,33 +196,77 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
               ))}
             </div>
           ) : messages.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
               {messages.map((message) => (
-                <Card
+                <Dialog
                   key={message._id}
-                  className="bg-card border-border rounded-md shadow-md animate-fade-in"
+                  open={openDialogId === message._id}
+                  onOpenChange={(open) =>
+                    setOpenDialogId(open ? message._id : null)
+                  }
                 >
-                  <CardContent className="p-4 flex flex-col gap-2">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        Anonymous Message
-                      </h3>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteMessage(message._id)}
-                        className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
-                        disabled={deletingIds.has(message._id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <p className="text-foreground">{message.message}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatTime(message.createdAt)}
-                    </p>
-                  </CardContent>
-                </Card>
+                  <DialogTrigger asChild>
+                    <Card
+                      className="bg-card border-border rounded-md shadow-md animate-fade-in hover:cursor-pointer hover:bg-background/5"
+                      aria-label="View full message"
+                    >
+                      <CardContent className="p-4 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            Anonymous Message
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent dialog from opening
+                              deleteMessage(message._id);
+                            }}
+                            className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
+                            disabled={deletingIds.has(message._id)}
+                            aria-label="Delete message"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-foreground line-clamp-2">
+                          {truncateMessage(message.message)}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatTime(message.createdAt)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </DialogTrigger>
+                  <DialogContent className="bg-card border-border rounded-lg shadow-lg animate-in fade-in duration-300 max-w-md p-0">
+                    <Card className="border-0 shadow-none m-4">
+                      <CardContent className="p-4 flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            Anonymous Message
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              deleteMessage(message._id);
+                              setOpenDialogId(null);
+                            }}
+                            className="text-muted-foreground hover:text-destructive hover:cursor-pointer"
+                            disabled={deletingIds.has(message._id)}
+                            aria-label="Delete message"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-foreground">{message.message}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatTime(message.createdAt)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </DialogContent>
+                </Dialog>
               ))}
             </div>
           ) : (

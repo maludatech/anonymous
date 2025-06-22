@@ -1,24 +1,47 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
 import { hash } from "@node-rs/argon2";
 import jwt from "jsonwebtoken";
+import { verify } from "jsonwebtoken";
 
-export const PATCH = async (req: Request) => {
+interface TokenPayload {
+  userId: string;
+  email: string;
+  username: string;
+}
+
+export const PATCH = async (req: NextRequest) => {
   try {
-    const data = await req.json();
-    const { email, password }: { email: string; password?: string } = data;
-
-    if (!email) {
+    // Extract and verify the JWT token from the Authorization header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
-        { message: "Email is required" },
-        { status: 400 }
+        { message: "Authorization token is required" },
+        { status: 401 }
       );
     }
 
+    const token = authHeader.split(" ")[1];
+    let decoded: TokenPayload;
+    try {
+      decoded = verify(
+        token,
+        process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD"
+      ) as TokenPayload;
+    } catch (error) {
+      return NextResponse.json(
+        { message: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    const { password }: { password?: string } = await req.json();
+
     await connectToDb();
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find the user by email from the decoded token
+    const user = await User.findOne({ email: decoded.email.toLowerCase() });
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
@@ -31,12 +54,12 @@ export const PATCH = async (req: Request) => {
         outputLen: 32,
         parallelism: 1,
       });
-
       updateFields.password = hashedPassword;
     }
 
+    // Update the user
     const updatedUser = await User.findOneAndUpdate(
-      { email: email.toLowerCase() },
+      { email: decoded.email.toLowerCase() },
       updateFields,
       { new: true }
     );
@@ -49,7 +72,7 @@ export const PATCH = async (req: Request) => {
     }
 
     // Generate a new JWT token
-    const token = jwt.sign(
+    const newToken = jwt.sign(
       {
         userId: updatedUser._id,
         email: updatedUser.email,
@@ -62,10 +85,18 @@ export const PATCH = async (req: Request) => {
     );
 
     return NextResponse.json(
-      { message: "Profile updated successfully", token },
+      {
+        message: "Profile updated successfully",
+        token: newToken,
+        user: {
+          email: updatedUser.email,
+          username: updatedUser.username,
+        },
+      },
       { status: 200 }
     );
   } catch (error: any) {
+    console.error("Error updating profile:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 };
