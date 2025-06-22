@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
-import { hash } from "@node-rs/argon2";
-import jwt from "jsonwebtoken";
-import { verify } from "jsonwebtoken";
+import { hash, verify as verifyPassword } from "@node-rs/argon2";
+import jwt, { verify as verifyToken } from "jsonwebtoken";
 
 interface TokenPayload {
   userId: string;
@@ -13,7 +12,7 @@ interface TokenPayload {
 
 export const PATCH = async (req: NextRequest) => {
   try {
-    // Extract and verify the JWT token from the Authorization header
+    // Extract and verify the JWT token
     const authHeader = req.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -25,7 +24,7 @@ export const PATCH = async (req: NextRequest) => {
     const token = authHeader.split(" ")[1];
     let decoded: TokenPayload;
     try {
-      decoded = verify(
+      decoded = verifyToken(
         token,
         process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD"
       ) as TokenPayload;
@@ -36,31 +35,57 @@ export const PATCH = async (req: NextRequest) => {
       );
     }
 
-    const { password }: { password?: string } = await req.json();
+    const {
+      oldPassword,
+      newPassword,
+    }: { oldPassword: string; newPassword: string } = await req.json();
+
+    // Validate input
+    if (!oldPassword || !newPassword) {
+      return NextResponse.json(
+        { message: "Current and new passwords are required" },
+        { status: 400 }
+      );
+    }
 
     await connectToDb();
 
-    // Find the user by email from the decoded token
+    // Find user by email from token
     const user = await User.findOne({ email: decoded.email.toLowerCase() });
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const updateFields: { password?: string } = {};
-    if (password) {
-      const hashedPassword = await hash(password, {
-        memoryCost: 19456,
-        timeCost: 2,
-        outputLen: 32,
-        parallelism: 1,
-      });
-      updateFields.password = hashedPassword;
+    // Verify old password
+    const isOldPasswordValid = await verifyPassword(user.password, oldPassword);
+    if (!isOldPasswordValid) {
+      return NextResponse.json(
+        { message: "Current password is incorrect" },
+        { status: 401 }
+      );
     }
 
-    // Update the user
+    // Check if new password is different from old password
+    const isSamePassword = await verifyPassword(user.password, newPassword);
+    if (isSamePassword) {
+      return NextResponse.json(
+        { message: "New password must be different from the current password" },
+        { status: 400 }
+      );
+    }
+
+    // Hash new password
+    const hashedPassword = await hash(newPassword, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
+
+    // Update user
     const updatedUser = await User.findOneAndUpdate(
       { email: decoded.email.toLowerCase() },
-      updateFields,
+      { password: hashedPassword },
       { new: true }
     );
 
@@ -71,7 +96,7 @@ export const PATCH = async (req: NextRequest) => {
       );
     }
 
-    // Generate a new JWT token
+    // Generate new JWT token
     const newToken = jwt.sign(
       {
         userId: updatedUser._id,
@@ -96,7 +121,6 @@ export const PATCH = async (req: NextRequest) => {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error updating profile:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 };

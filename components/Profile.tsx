@@ -23,14 +23,11 @@ import { jwtDecode } from "jwt-decode";
 
 const formSchema = z
   .object({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .optional()
-      .or(z.literal("")),
-    confirmPassword: z.string().optional().or(z.literal("")),
+    oldPassword: z.string().min(1, "Current password is required"),
+    password: z.string().min(8, "New password must be at least 8 characters"),
+    confirmPassword: z.string().min(1, "Confirm password is required"),
   })
-  .refine((data) => !data.password || data.password === data.confirmPassword, {
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
@@ -47,6 +44,7 @@ interface DecodedToken {
 const Profile = ({ callbackUrl }: ProfileProps) => {
   const { user, isAuthenticated, login } = useAuthStore();
   const router = useRouter();
+  const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -61,6 +59,7 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      oldPassword: "",
       password: "",
       confirmPassword: "",
     },
@@ -70,11 +69,13 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
     try {
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
+      console.error("Error decoding token:", error);
       return null;
     }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log("Form submitted with values:", values); // Debug log
     setIsSubmitting(true);
     try {
       const controller = new AbortController();
@@ -87,9 +88,9 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
           Authorization: `Bearer ${useAuthStore.getState().token}`,
         },
         body: JSON.stringify({
-          password: values.password ? values.password.trim() : undefined,
+          oldPassword: values.oldPassword.trim(),
+          newPassword: values.password.trim(),
         }),
-        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -97,7 +98,7 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update profile");
+        toast.error(data.message || "Failed to update profile");
       }
 
       const { message, token, user: updatedUser } = data;
@@ -113,10 +114,12 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
       }
       toast.success(message || "Profile updated successfully!");
       form.reset({
+        oldPassword: "",
         password: "",
         confirmPassword: "",
       });
     } catch (error: any) {
+      console.error("Submission error:", error);
       toast.error(
         error.message || "Failed to update profile. Please try again."
       );
@@ -172,11 +175,52 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
                 <div className="space-y-6">
                   <FormField
                     control={form.control}
+                    name="oldPassword"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-foreground">
+                          Current Password
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input
+                              type={showOldPassword ? "text" : "password"}
+                              placeholder="Enter current password"
+                              className="pl-10 pr-10 bg-background text-foreground border-input focus:ring-ring"
+                              {...field}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowOldPassword(!showOldPassword)
+                              }
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground hover:cursor-pointer"
+                              aria-label={
+                                showOldPassword
+                                  ? "Hide password"
+                                  : "Show password"
+                              }
+                            >
+                              {showOldPassword ? (
+                                <EyeOff className="h-5 w-5" />
+                              ) : (
+                                <Eye className="h-5 w-5" />
+                              )}
+                            </button>
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
                     name="password"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-foreground">
-                          New Password (optional)
+                          New Password
                         </FormLabel>
                         <FormControl>
                           <div className="relative">
