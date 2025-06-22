@@ -1,69 +1,81 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { connectToDb } from "@/lib/database";
 import Message from "@/models/Messages";
 import User from "@/models/Users";
 
+interface PostBody {
+  message: string;
+}
+
 export const GET = async (
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) => {
-  const resolvedParams = await params;
-  const username = resolvedParams.username;
   try {
+    const resolvedParams = await params;
+    const username = resolvedParams.username.toLowerCase();
+
     await connectToDb();
-    const message = await Message.find({ receiver: username });
-    if (!message) {
-      return NextResponse.json(
-        {
-          message: "Error fetching your messages, try again later",
-        },
-        { status: 404 }
-      );
-    }
-    return NextResponse.json({ message }, { status: 200 });
-  } catch (error) {
-    console.error("Error fetching messages", error);
+    const messages = await Message.find({ receiver: username }).sort({
+      createdAt: -1,
+    });
+
+    return NextResponse.json(messages, { status: 200 });
+  } catch (error: any) {
+   
     return NextResponse.json(
-      { message: "Error fetching your messages, try again later" },
+      { message: "Failed to fetch messages. Please try again later." },
       { status: 500 }
     );
   }
 };
 
 export const POST = async (
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ username: string }> }
 ) => {
-  const resolvedParams = await params;
-  const username = resolvedParams.username;
-
-  const { message } = await req.json();
-
   try {
-    await connectToDb();
-    const user = await User.findOne({ username: username });
+    const resolvedParams = await params;
+    const username = resolvedParams.username.toLowerCase();
+    const { message }: PostBody = await req.json();
 
-    if (!user) {
+    // Validate message
+    if (
+      !message ||
+      typeof message !== "string" ||
+      message.trim().length === 0
+    ) {
       return NextResponse.json(
-        { message: "User not found" },
-        {
-          status: 404,
-        }
+        { message: "Message is required and cannot be empty." },
+        { status: 400 }
       );
     }
+    if (message.length > 500) {
+      return NextResponse.json(
+        { message: "Message cannot exceed 500 characters." },
+        { status: 400 }
+      );
+    }
+
+    await connectToDb();
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return NextResponse.json({ message: "User not found." }, { status: 404 });
+    }
+
     const newMessage = await Message.create({
       receiver: user.username,
-      message: message,
+      message: message.trim(),
     });
 
     return NextResponse.json(
-      { message: "Message Posted Successfully" },
-      { status: 200 }
+      { message: "Message posted successfully." },
+      { status: 201 }
     );
-  } catch (error) {
-    console.error("Error posting message", error);
+  } catch (error: any) {
     return NextResponse.json(
-      { message: "Error posting your message, try again later" },
+      { message: "Failed to post message. Please try again later." },
       { status: 500 }
     );
   }
