@@ -2,14 +2,13 @@ import { NextResponse, NextRequest } from "next/server";
 import User from "@/models/Users";
 import { connectToDb } from "@/lib/database";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import { hash, verify } from "@node-rs/argon2";
 
 export const POST = async (request: NextRequest) => {
   try {
     const data = await request.json();
-    const { email, password } = data;
 
-    console.log("password:", password);
+    const { email, password }: { email: string; password: string } = data;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -22,24 +21,18 @@ export const POST = async (request: NextRequest) => {
     const existingUser = await User.findOne({ email: email.toLowerCase() });
 
     if (!existingUser) {
-      console.log(`No user found for email: ${email.toLowerCase()}`);
       return NextResponse.json({ message: "Invalid email" }, { status: 401 });
     }
 
-    console.log(`Comparing password for user: ${existingUser.email}`);
-    const passwordMatch = await bcrypt.compare(password, existingUser.password);
-
-    console.log("existing password: ", existingUser.password);
+    const passwordMatch = await verify(existingUser.password, password);
 
     if (!passwordMatch) {
-      console.log(`Password mismatch for user: ${existingUser.email}`);
       return NextResponse.json(
         { message: "Invalid password" },
         { status: 401 }
       );
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       {
         userId: existingUser._id,
@@ -52,7 +45,6 @@ export const POST = async (request: NextRequest) => {
 
     return NextResponse.json({ token }, { status: 200 });
   } catch (error: any) {
-    console.error("Error during sign-in:", error.message);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

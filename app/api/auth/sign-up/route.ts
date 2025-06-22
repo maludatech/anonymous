@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import bcrypt from "bcryptjs";
+import { hash } from "@node-rs/argon2";
 import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
 import { sendWelcomeEmail } from "@/lib/email";
@@ -7,15 +7,14 @@ import { sendWelcomeEmail } from "@/lib/email";
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
+    const { email, password, username } = data;
 
-    if (!data) {
+    if (!email || !password || !username) {
       return NextResponse.json(
-        { message: "Invalid request data" },
+        { message: "Missing required fields" },
         { status: 400 }
       );
     }
-
-    const { email, password, username } = data;
 
     await connectToDb();
 
@@ -31,7 +30,6 @@ export async function POST(request: NextRequest) {
     }
 
     const existingEmail = await User.findOne({ email: email.toLowerCase() });
-
     if (existingEmail) {
       return NextResponse.json(
         { message: "Email already exists, please sign in" },
@@ -39,7 +37,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, {
+      memoryCost: 19456,
+      timeCost: 2,
+      outputLen: 32,
+      parallelism: 1,
+    });
 
     const newUser = new User({
       email: email.toLowerCase(),
@@ -48,8 +51,14 @@ export async function POST(request: NextRequest) {
     });
     await newUser.save();
 
-    // Send welcome email
-    await sendWelcomeEmail(email, username);
+    try {
+      await sendWelcomeEmail(email, username);
+    } catch (emailError: any) {
+      console.error(
+        `Failed to send welcome email to ${email}:`,
+        emailError.message
+      );
+    }
 
     return NextResponse.json(
       {
@@ -59,7 +68,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Sign-up error:", error);
+    console.error("Sign-up error:", error.message);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }
