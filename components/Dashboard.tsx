@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogOverlay,
 } from "@/components/ui/dialog";
 
 interface Message {
@@ -270,6 +271,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                       </CardContent>
                     </Card>
                   </DialogTrigger>
+                  <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-300" />
                   <DialogContent className="bg-card border-border rounded-lg shadow-lg animate-in zoom-in duration-300 max-w-md p-4">
                     <DialogHeader>
                       <DialogTitle className="text-primary">
