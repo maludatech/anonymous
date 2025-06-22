@@ -73,7 +73,6 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       toast.success("Signed in successfully!");
       router.push(callbackUrl);
     } catch (error: any) {
-      console.error("Sign-in error:", error.message);
       toast.error(error.message || "Failed to sign in. Please try again.");
     } finally {
       setIsSubmitting(false);
