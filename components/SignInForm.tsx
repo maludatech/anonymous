@@ -1,9 +1,14 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { toast } from "sonner";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -12,18 +17,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Mail, Lock } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/useAuthStore";
-import { toast } from "sonner";
 
-// Define form schema with zod
 const formSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  email: z.string().email({ message: "Invalid email address" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
 });
 
 export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
@@ -35,9 +36,8 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
     if (isAuthenticated) {
       router.push(callbackUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, callbackUrl]);
 
-  // Initialize form with react-hook-form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,32 +46,35 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
     },
   });
 
-  // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          email: values.email.trim(),
+          password: values.password.trim(),
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.message || "Sign-in failed");
-        return;
+        throw new Error(data.message || "Sign-in failed");
       }
 
-      login({
-        email: data.email,
-        username: data.username,
-      });
+      const { token, user } = data;
+      if (!token || !user?.email || !user?.username) {
+        throw new Error("Invalid response from server");
+      }
+
+      login({ email: user.email, username: user.username }, token);
       toast.success("Signed in successfully!");
       router.push(callbackUrl);
     } catch (error: any) {
-      console.error("Sign-in error:", error);
-      toast(error.message || "Failed to sign in. Please try again.");
+      console.error("Sign-in error:", error.message);
+      toast.error(error.message || "Failed to sign in. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -131,6 +134,7 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
               disabled={isSubmitting}
+              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               {isSubmitting ? "Signing In..." : "Sign In"}
             </Button>

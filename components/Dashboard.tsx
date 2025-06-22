@@ -59,16 +59,28 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
   };
 
   // Delete message
+
   const deleteMessage = async (messageId: string) => {
     try {
+      const token = useAuthStore.getState().token;
+      if (!token) {
+        toast.error("Please sign in again.");
+        router.push("/sign-in");
+        return;
+      }
+
       const response = await fetch(`/api/messages/delete/${messageId}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (response.ok) {
         setMessages(messages.filter((msg) => msg._id !== messageId));
         toast.success("Message deleted successfully.");
       } else {
-        toast.error("Failed to delete message.");
+        const error = await response.json();
+        toast.error(error.message || "Failed to delete message.");
       }
     } catch (error) {
       toast.error("Error deleting message.");

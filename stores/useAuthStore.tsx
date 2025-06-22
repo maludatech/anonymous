@@ -6,40 +6,43 @@ interface User {
   username: string;
 }
 
-// Define the AuthStore interface
 interface AuthStore {
-  user: User;
+  user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
-  login: (user: User) => void;
+  login: (user: User, token: string) => void;
   logout: () => void;
   setUser: (user: Partial<User>) => void;
 }
 
-// Initial state
 const initialState: User = {
   email: "",
   username: "",
 };
 
-// Create the Zustand store with persistence
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set) => ({
-      user: initialState,
+      user: null,
+      token: null,
       isAuthenticated: false,
-      login: (user: User) =>
+      login: (user: User, token: string) =>
         set({
           user,
+          token,
           isAuthenticated: true,
         }),
       logout: () =>
         set({
-          user: initialState,
+          user: null,
+          token: null,
           isAuthenticated: false,
         }),
       setUser: (user: Partial<User>) =>
         set((state) => ({
-          user: { ...state.user, ...user },
+          user: state.user
+            ? { ...state.user, ...user }
+            : { ...initialState, ...user },
         })),
     }),
     {
