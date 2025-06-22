@@ -23,13 +23,12 @@ import { jwtDecode } from "jwt-decode";
 
 const formSchema = z
   .object({
-    firstName: z.string().min(1, "First name is required"),
-    lastName: z.string().min(1, "Last name is required"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
-      .optional(),
-    confirmPassword: z.string().optional(),
+      .optional()
+      .or(z.literal("")),
+    confirmPassword: z.string().optional().or(z.literal("")),
   })
   .refine((data) => !data.password || data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -71,7 +70,6 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
     try {
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
-      console.error("Error decoding token:", error);
       return null;
     }
   };
@@ -79,6 +77,9 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
       const response = await fetch("/api/profile-update", {
         method: "PATCH",
         headers: {
@@ -88,7 +89,10 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
         body: JSON.stringify({
           password: values.password ? values.password.trim() : undefined,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
@@ -146,7 +150,7 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
-                          value={user?.username}
+                          value={user?.username ?? ""}
                           readOnly
                           className="pl-10 bg-input text-foreground border-input"
                         />
@@ -157,7 +161,7 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
-                          value={user?.email}
+                          value={user?.email ?? ""}
                           readOnly
                           className="pl-10 bg-input text-foreground border-input"
                         />
@@ -247,9 +251,8 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
                 </div>
                 <Button
                   type="submit"
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                   disabled={isSubmitting}
-                  style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
                 >
                   {isSubmitting ? "Updating..." : "Update Profile"}
                 </Button>
