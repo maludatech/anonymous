@@ -1,12 +1,15 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Toaster } from "sonner";
+import { Toaster } from "./ui/sonner";
 
 export default function ThemedToaster() {
   const { resolvedTheme } = useTheme();
 
   return (
-    <Toaster theme={resolvedTheme as "light" | "dark" | "system" | undefined} />
+    <Toaster
+      richColors
+      theme={resolvedTheme as "light" | "dark" | "system" | undefined}
+    />
   );
 }
