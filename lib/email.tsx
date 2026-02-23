@@ -1,23 +1,30 @@
+import React from "react";
 import { Resend } from "resend";
-import { render } from "@react-email/render";
-import PasswordResetEmail from "@/emails/PasswordResetEmail";
-import WelcomeEmail from "@/emails/WelcomeEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendResetEmail(email: string, resetUrl: string) {
   try {
+    const { render } = await import("@react-email/render");
+    const { default: PasswordResetEmail } = await import(
+      "@/emails/PasswordResetEmail"
+    );
+
     const emailHtml = await render(
-      <PasswordResetEmail email={email} resetUrl={resetUrl} />,
-      { pretty: true }
+      React.createElement(PasswordResetEmail, { email, resetUrl }),
     );
 
     const response = await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@polomalbullish-remi.com>",
+      from: "Maluda Anonymous <no-reply@driftfund.net>",
       to: email,
       subject: "Maluda Anonymous - Password Reset",
       html: emailHtml,
     });
+
+    if (response.error) {
+      console.error("Resend error:", response.error);
+      throw new Error(response.error.message);
+    }
 
     return response;
   } catch (error: any) {
@@ -32,19 +39,32 @@ export async function sendResetEmail(email: string, resetUrl: string) {
 
 export async function sendWelcomeEmail(email: string, username: string) {
   try {
+    const { render } = await import("@react-email/render");
+    const { default: WelcomeEmail } = await import("@/emails/WelcomeEmail");
+
     const emailHtml = await render(
-      <WelcomeEmail email={email} username={username} />,
-      { pretty: true }
+      React.createElement(WelcomeEmail, { email, username }),
     );
 
-    await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@polomalbullish-remi.com>",
+    const response = await resend.emails.send({
+      from: "Maluda Anonymous <no-reply@driftfund.net>",
       to: email,
       subject: "Welcome to Maluda Anonymous!",
       html: emailHtml,
     });
-  } catch (error) {
-    console.error("Welcome email error:", error);
+
+    if (response.error) {
+      console.error("Resend error:", response.error);
+      throw new Error(response.error.message);
+    }
+
+    return response;
+  } catch (error: any) {
+    console.error("Welcome email error:", {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data,
+    });
     throw new Error("Failed to send welcome email");
   }
 }

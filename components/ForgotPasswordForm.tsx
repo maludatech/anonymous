@@ -1,4 +1,3 @@
-// components/ForgotPasswordForm.tsx
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -61,7 +60,7 @@ export default function ForgotPasswordForm({
       form.reset();
     } catch (error: any) {
       toast.error(
-        error.message || "Failed to send reset email. Please try again."
+        error.message || "Failed to send reset email. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -72,7 +71,7 @@ export default function ForgotPasswordForm({
     <div className="flex justify-center items-center pt-16 px-4">
       <div
         className={cn(
-          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500"
+          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500",
         )}
       >
         <h2 className="text-2xl font-bold text-center text-foreground mb-6">
@@ -103,7 +102,7 @@ export default function ForgotPasswordForm({
             />
             <Button
               type="submit"
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
+              className="w-full bg-primary text-primary-foreground hover:cursor-pointer"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Sending..." : "Send Reset Email"}

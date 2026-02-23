@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json(
         { message: "If an account exists, a reset email has been sent." },
-        { status: 200 }
+        { status: 200 },
       );
     }
 
@@ -41,9 +41,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       { message: "If an account exists, a reset email has been sent." },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
+    console.error("Forgot password error:", error); // add this
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

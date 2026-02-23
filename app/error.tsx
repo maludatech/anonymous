@@ -1,4 +1,3 @@
-// app/error.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ export default function Error({
     <div className="flex justify-center items-center min-h-screen px-4 bg-background">
       <div
         className={cn(
-          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border text-center animate-in fade-in duration-500"
+          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border text-center animate-in fade-in duration-500",
         )}
       >
         <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
