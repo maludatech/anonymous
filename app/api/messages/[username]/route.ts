@@ -54,7 +54,10 @@ export const GET = async (
     }
 
     await connectToDb();
-    const messages = await Message.find({ receiver: username }).sort({
+    const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const messages = await Message.find({
+      receiver: { $regex: `^${escapedUsername}$`, $options: "i" },
+    }).sort({
       createdAt: -1,
     });
 

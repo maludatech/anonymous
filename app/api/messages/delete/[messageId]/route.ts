@@ -53,10 +53,15 @@ export const DELETE = async (
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Find and verify message ownership
+    // Find and verify message ownership (case-insensitive: legacy records
+    // may have a receiver value with different casing than the username)
+    const escapedUsername = user.username.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&"
+    );
     const message = await Message.findOne({
       _id: messageId,
-      receiver: user.username,
+      receiver: { $regex: `^${escapedUsername}$`, $options: "i" },
     });
     if (!message) {
       return NextResponse.json(
