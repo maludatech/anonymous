@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientThemeProvider } from "@/components/ClientThemeProvider";
 import ThemedToaster from "@/components/ThemedToaster";
-import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN } from "@/lib/constants";
+import { APP_DESCRIPTION, APP_NAME, APP_SLOGAN, APP_URL } from "@/lib/constants";
 import Navbar from "@/components/shared/Navbar";
 
 const geistSans = Geist({
@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
   title: {
     template: `%s | ${APP_NAME} `,
     default: `${APP_NAME} | ${APP_SLOGAN}`,
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: APP_NAME,
     description: APP_DESCRIPTION,
-    url: "https://maluda-anonymous.vercel.app",
+    url: APP_URL,
     siteName: APP_NAME,
     images: [
       {

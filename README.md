@@ -49,7 +49,7 @@ Create a `.env.local` file in the project root with:
 | `NEXT_PUBLIC_APP_URL`  | Yes      | Public base URL of the app (used in emails and share links). |
 | `APP_NAME`             | No       | Overrides the display name used across the app.           |
 | `APP_SLOGAN`           | No       | Overrides the tagline shown on the landing page.           |
-| `DESCRIPTION`          | No       | Overrides the app description text.                        |
+| `APP_DESCRIPTION`      | No       | Overrides the app description text.                        |
 
 ### 3. Run the dev server
 
