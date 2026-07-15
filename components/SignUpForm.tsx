@@ -65,11 +65,14 @@ export default function SignUpForm({ callbackUrl }: { callbackUrl: string }) {
         },
         body: JSON.stringify(values),
       });
+      const data: any = await response.json();
       if (!response.ok) {
-        const errorData: any = await response.json();
-        toast.error(errorData.message || "Failed to create account");
+        toast.error(data.message || "Failed to create account");
       } else {
-        toast.success("Account created successfully!");
+        toast.success(
+          data.message ||
+            "Account created! Check your email to verify your account."
+        );
         router.push("/sign-in");
       }
     } catch (error) {

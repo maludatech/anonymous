@@ -3,6 +3,10 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+const SENDER_NAME = process.env.SENDER_NAME || "Maluda Anonymous";
+const SENDER_EMAIL = process.env.SENDER_EMAIL || "no-reply@driftfund.net";
+const FROM = `${SENDER_NAME} <${SENDER_EMAIL}>`;
+
 export async function sendResetEmail(email: string, resetUrl: string) {
   try {
     const { render } = await import("@react-email/render");
@@ -15,7 +19,7 @@ export async function sendResetEmail(email: string, resetUrl: string) {
     );
 
     const response = await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@driftfund.net>",
+      from: FROM,
       to: email,
       subject: "Maluda Anonymous - Password Reset",
       html: emailHtml,
@@ -47,7 +51,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
     );
 
     const response = await resend.emails.send({
-      from: "Maluda Anonymous <no-reply@driftfund.net>",
+      from: FROM,
       to: email,
       subject: "Welcome to Maluda Anonymous!",
       html: emailHtml,
@@ -66,5 +70,41 @@ export async function sendWelcomeEmail(email: string, username: string) {
       response: error.response?.data,
     });
     throw new Error("Failed to send welcome email");
+  }
+}
+
+export async function sendVerificationEmail(
+  email: string,
+  username: string,
+  verifyUrl: string,
+) {
+  try {
+    const { render } = await import("@react-email/render");
+    const { default: VerifyEmail } = await import("@/emails/VerifyEmail");
+
+    const emailHtml = await render(
+      React.createElement(VerifyEmail, { email, username, verifyUrl }),
+    );
+
+    const response = await resend.emails.send({
+      from: FROM,
+      to: email,
+      subject: "Verify your Maluda Anonymous email",
+      html: emailHtml,
+    });
+
+    if (response.error) {
+      console.error("Resend error:", response.error);
+      throw new Error(response.error.message);
+    }
+
+    return response;
+  } catch (error: any) {
+    console.error("Verification email error:", {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data,
+    });
+    throw new Error("Failed to send verification email");
   }
 }

@@ -1,20 +1,25 @@
 import { NextResponse, NextRequest } from "next/server";
 import { hash } from "@node-rs/argon2";
+import crypto from "crypto";
 import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
-import { sendWelcomeEmail } from "@/lib/email";
+import EmailVerificationToken from "@/models/EmailVerificationTokens";
+import { sendVerificationEmail } from "@/lib/email";
+import { signUpSchema, firstIssueMessage } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
-    const { email, password, username } = data;
+    const parsed = signUpSchema.safeParse(data);
 
-    if (!email || !password || !username) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: firstIssueMessage(parsed.error) },
         { status: 400 }
       );
     }
+
+    const { email, password, username } = parsed.data;
 
     await connectToDb();
 
@@ -37,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await hash(password.trim(), {
+    const hashedPassword = await hash(password, {
       memoryCost: 19456,
       timeCost: 2,
       outputLen: 32,
@@ -48,21 +53,37 @@ export async function POST(request: NextRequest) {
       email: email.toLowerCase(),
       username: username.toLowerCase(),
       password: hashedPassword,
+      emailVerified: false,
     });
     await newUser.save();
 
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await EmailVerificationToken.create({
+      userId: newUser._id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const verifyUrl = `${
+      process.env.NEXT_PUBLIC_APP_URL
+    }/verify-email?token=${token}&email=${encodeURIComponent(newUser.email)}`;
+
     try {
-      await sendWelcomeEmail(email, username);
+      await sendVerificationEmail(newUser.email, newUser.username, verifyUrl);
     } catch (emailError: any) {
       console.error(
-        `Failed to send welcome email to ${email}:`,
+        `Failed to send verification email to ${newUser.email}:`,
         emailError.message
       );
     }
 
     return NextResponse.json(
       {
-        message: "Account created successfully",
+        message:
+          "Account created. Check your email to verify your account before signing in.",
         user: { email: newUser.email, username: newUser.username },
       },
       { status: 201 }

@@ -4,18 +4,22 @@ import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
 import { hash } from "@node-rs/argon2";
+import { resetPasswordSchema, firstIssueMessage } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
     await connectToDb();
-    const { email, token, password } = await request.json();
+    const data = await request.json();
+    const parsed = resetPasswordSchema.safeParse(data);
 
-    if (!email || !token || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Missing required fields" },
+        { message: firstIssueMessage(parsed.error) },
         { status: 400 }
       );
     }
+
+    const { email, token, password } = parsed.data;
 
     const user = await User.findOne({ email: email.toLowerCase() });
 

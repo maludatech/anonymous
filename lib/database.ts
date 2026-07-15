@@ -12,8 +12,7 @@ export const connectToDb = async (): Promise<void> => {
   const MONGODB_URI = process.env.MONGODB_URI as string;
 
   if (!MONGODB_URI) {
-    console.error("Error: MONGODB_URI is not defined.");
-    return;
+    throw new Error("MONGODB_URI is not defined.");
   }
 
   try {

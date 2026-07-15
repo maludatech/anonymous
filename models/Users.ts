@@ -24,6 +24,10 @@ const userSchema = new Schema(
       maxlength: [20, "Username must be less than 20 characters"],
       match: [/^[a-zA-Z0-9]+$/, "Username: alphanumeric characters only"],
     },
+    emailVerified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

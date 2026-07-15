@@ -3,10 +3,7 @@ import { connectToDb } from "@/lib/database";
 import Message from "@/models/Messages";
 import User from "@/models/Users";
 import jwt from "jsonwebtoken";
-
-interface PostBody {
-  message: string;
-}
+import { sendMessageSchema, firstIssueMessage } from "@/lib/validation";
 
 interface JwtPayload {
   userId: string;
@@ -78,25 +75,17 @@ export const POST = async (
   try {
     const resolvedParams = await params;
     const username = resolvedParams.username.toLowerCase();
-    const { message }: PostBody = await req.json();
+    const body = await req.json();
+    const parsed = sendMessageSchema.safeParse(body);
 
-    // Validate message
-    if (
-      !message ||
-      typeof message !== "string" ||
-      message.trim().length === 0
-    ) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Message is required and cannot be empty." },
+        { message: firstIssueMessage(parsed.error) },
         { status: 400 }
       );
     }
-    if (message.length > 500) {
-      return NextResponse.json(
-        { message: "Message cannot exceed 500 characters." },
-        { status: 400 }
-      );
-    }
+
+    const { message } = parsed.data;
 
     await connectToDb();
     const user = await User.findOne({ username });
@@ -105,9 +94,9 @@ export const POST = async (
       return NextResponse.json({ message: "User not found." }, { status: 404 });
     }
 
-    const newMessage = await Message.create({
+    await Message.create({
       receiver: user.username,
-      message: message.trim(),
+      message,
     });
 
     return NextResponse.json(

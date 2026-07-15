@@ -3,6 +3,7 @@ import { connectToDb } from "@/lib/database";
 import User from "@/models/Users";
 import { hash, verify as verifyPassword } from "@node-rs/argon2";
 import jwt, { verify as verifyToken } from "jsonwebtoken";
+import { profileUpdateSchema, firstIssueMessage } from "@/lib/validation";
 
 interface TokenPayload {
   userId: string;
@@ -37,18 +38,17 @@ export const PATCH = async (req: NextRequest) => {
       );
     }
 
-    const {
-      oldPassword,
-      newPassword,
-    }: { oldPassword: string; newPassword: string } = await req.json();
+    const body = await req.json();
+    const parsed = profileUpdateSchema.safeParse(body);
 
-    // Validate input
-    if (!oldPassword || !newPassword) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Current and new passwords are required" },
+        { message: firstIssueMessage(parsed.error) },
         { status: 400 }
       );
     }
+
+    const { oldPassword, newPassword } = parsed.data;
 
     await connectToDb();
 
@@ -104,8 +104,6 @@ export const PATCH = async (req: NextRequest) => {
         userId: updatedUser._id,
         email: updatedUser.email,
         username: updatedUser.username,
-        fullName: updatedUser.fullName,
-        countryOfResidence: updatedUser.countryOfResidence,
       },
       jwtSecret,
       { expiresIn: "3d" }

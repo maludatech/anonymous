@@ -30,6 +30,8 @@ const formSchema = z.object({
 export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [isResending, setIsResending] = useState(false);
   const router = useRouter();
   const { login, isAuthenticated } = useAuthStore();
 
@@ -49,6 +51,7 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+    setUnverifiedEmail(null);
     try {
       const response = await fetch("/api/auth/sign-in", {
         method: "POST",
@@ -62,6 +65,9 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.code === "EMAIL_NOT_VERIFIED") {
+          setUnverifiedEmail(values.email.trim());
+        }
         throw new Error(data.message || "Sign-in failed");
       }
 
@@ -77,6 +83,27 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
       toast.error(error.message || "Failed to sign in. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!unverifiedEmail) return;
+    setIsResending(true);
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to resend verification email");
+      }
+      toast.success(data.message || "Verification email sent.");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend verification email.");
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -156,6 +183,22 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
             </Button>
           </form>
         </Form>
+        {unverifiedEmail && (
+          <div className="mt-4 rounded-md border border-border bg-muted p-3 text-center">
+            <p className="text-sm text-muted-foreground mb-2">
+              Your email isn&apos;t verified yet.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={resendVerification}
+              disabled={isResending}
+            >
+              {isResending ? "Sending..." : "Resend verification email"}
+            </Button>
+          </div>
+        )}
         <p className="mt-4 text-center text-muted-foreground">
           Don’t have an account?{" "}
           <Link href="/sign-up" className="text-primary hover:underline">

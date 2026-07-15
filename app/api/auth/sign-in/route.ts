@@ -2,20 +2,22 @@ import { NextResponse, NextRequest } from "next/server";
 import User from "@/models/Users";
 import { connectToDb } from "@/lib/database";
 import jwt from "jsonwebtoken";
-import { hash, verify } from "@node-rs/argon2";
+import { verify } from "@node-rs/argon2";
+import { signInSchema, firstIssueMessage } from "@/lib/validation";
 
 export const POST = async (request: NextRequest) => {
   try {
     const data = await request.json();
+    const parsed = signInSchema.safeParse(data);
 
-    const { email, password }: { email: string; password: string } = data;
-
-    if (!email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { message: "Email and password are required" },
+        { message: firstIssueMessage(parsed.error) },
         { status: 400 }
       );
     }
+
+    const { email, password } = parsed.data;
 
     await connectToDb();
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -30,6 +32,16 @@ export const POST = async (request: NextRequest) => {
       return NextResponse.json(
         { message: "Invalid password" },
         { status: 401 }
+      );
+    }
+
+    if (!existingUser.emailVerified) {
+      return NextResponse.json(
+        {
+          message: "Please verify your email before signing in.",
+          code: "EMAIL_NOT_VERIFIED",
+        },
+        { status: 403 }
       );
     }
 

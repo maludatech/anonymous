@@ -4,11 +4,22 @@ import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
 import { sendResetEmail } from "@/lib/email";
+import { forgotPasswordSchema, firstIssueMessage } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
   try {
     await connectToDb();
-    const { email } = await req.json();
+    const data = await req.json();
+    const parsed = forgotPasswordSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: firstIssueMessage(parsed.error) },
+        { status: 400 }
+      );
+    }
+
+    const { email } = parsed.data;
     const user = await User.findOne({ email: email.toLowerCase() });
 
     if (!user) {

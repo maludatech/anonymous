@@ -95,7 +95,7 @@ const s: Record<string, React.CSSProperties> = {
   },
   button: {
     display: "inline-block",
-    backgroundColor: "#1d4ed8",
+    backgroundColor: "#6d28d9",
     color: "#ffffff",
     fontSize: "15px",
     fontWeight: 600,
