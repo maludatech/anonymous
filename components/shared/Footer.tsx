@@ -16,7 +16,7 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
 
 export default function Footer() {
   return (
-    <footer className="bg-muted py-8 fixed bottom-0 w-full z-10">
+    <footer className="border-t border-border bg-muted py-8">
       <div className="container mx-auto px-4 text-center">
         <div className="flex justify-center space-x-4 mb-4">
           <a

@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Mail } from "lucide-react";
+import { Mail, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -71,9 +71,12 @@ export default function ForgotPasswordForm({
     <div className="flex justify-center items-center pt-16 px-4">
       <div
         className={cn(
-          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500",
+          "w-full max-w-md p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500",
         )}
       >
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <KeyRound className="h-6 w-6 text-primary" />
+        </div>
         <h2 className="text-2xl font-bold text-center text-foreground mb-6">
           Forgot Password
         </h2>

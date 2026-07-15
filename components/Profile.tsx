@@ -75,7 +75,6 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Form submitted with values:", values); // Debug log
     setIsSubmitting(true);
     try {
       const controller = new AbortController();
@@ -99,6 +98,7 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
 
       if (!response.ok) {
         toast.error(data.message || "Failed to update profile");
+        return;
       }
 
       const { message, token, user: updatedUser } = data;

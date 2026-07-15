@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, ShieldAlert } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -90,9 +90,12 @@ export default function ResetPasswordForm({
       <div className="flex justify-center items-center pt-16 px-4">
         <div
           className={cn(
-            "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500 text-center"
+            "w-full max-w-md p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500 text-center"
           )}
         >
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <ShieldAlert className="h-6 w-6 text-destructive" />
+          </div>
           <h2 className="text-2xl font-bold text-foreground mb-6">
             Invalid Link
           </h2>
@@ -102,7 +105,6 @@ export default function ResetPasswordForm({
           <Button
             asChild
             className="bg-primary text-primary-foreground hover:bg-primary/90"
-            style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
           >
             <Link href="/forgot-password">Request Another Link</Link>
           </Button>
@@ -115,9 +117,12 @@ export default function ResetPasswordForm({
     <div className="flex justify-center items-center pt-16 px-4">
       <div
         className={cn(
-          "w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500"
+          "w-full max-w-md p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500"
         )}
       >
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <Lock className="h-6 w-6 text-primary" />
+        </div>
         <h2 className="text-2xl font-bold text-center text-foreground mb-6">
           Reset Password
         </h2>
@@ -205,7 +210,6 @@ export default function ResetPasswordForm({
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
               disabled={isSubmitting}
-              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               {isSubmitting ? "Resetting..." : "Reset Password"}
             </Button>

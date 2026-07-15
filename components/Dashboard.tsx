@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Copy, Share2 } from "lucide-react";
+import { Trash2, Copy, Share2, Inbox, Mail } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
@@ -172,11 +172,10 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
         <Card className="mb-6 bg-card border border-border rounded-lg shadow-lg animate-in slide-in-from-top">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-foreground font-poppins">
-              Welcome, {user?.username || "User"}! 🤞
+              Welcome, {user?.username || "User"}
             </CardTitle>
             <p className="text-muted-foreground text-lg">
-              Share your unique link to receive anonymous messages from friends.
-              Who knows, maybe a secret crush will reveal themselves! 💕
+              Share your link below to start receiving anonymous messages.
             </p>
           </CardHeader>
           <CardContent>
@@ -208,9 +207,9 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
               <div className="col-span-full flex items-center gap-2 mb-2">
                 <h2 className="text-xl font-bold text-foreground">
-                  Your Inbox 📬
+                  Your Inbox
                 </h2>
-                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                <span className="bg-pop text-pop-foreground text-xs font-bold px-2 py-1 rounded-full">
                   {messages.length}
                 </span>
               </div>
@@ -230,20 +229,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                       <CardContent className="p-4 flex flex-col gap-3">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <svg
-                              className="w-5 h-5 text-muted-foreground"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                              />
-                            </svg>
+                            <Mail className="w-5 h-5 text-muted-foreground" />
                             <h3 className="text-lg font-semibold text-primary">
                               Anonymous Message
                             </h3>
@@ -298,13 +284,17 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
               ))}
             </div>
           ) : (
-            <Card className="bg-card border-border rounded-lg shadow-md text-center p-6 animate-in zoom-in">
-              <CardContent>
+            <Card className="bg-card border-border rounded-lg shadow-md text-center p-10 animate-in zoom-in">
+              <CardContent className="flex flex-col items-center gap-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
+                  <Inbox className="h-7 w-7 text-primary" />
+                </div>
                 <p className="text-xl font-semibold text-foreground">
-                  No secret messages yet! 📬
+                  No messages yet
                 </p>
-                <p className="text-muted-foreground">
-                  Share your link to hear from your secret admirers! 💌
+                <p className="text-muted-foreground max-w-sm">
+                  Share your link above and messages will start showing up
+                  here as soon as someone sends one.
                 </p>
               </CardContent>
             </Card>

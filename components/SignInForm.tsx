@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, LogIn } from "lucide-react";
 import Link from "next/link";
 
 const formSchema = z.object({
@@ -82,7 +82,10 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
 
   return (
     <div className="flex justify-center items-center py-16 px-4">
-      <div className="w-full max-w-xl p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500">
+      <div className="w-full max-w-md p-8 bg-card rounded-lg shadow-lg border border-border animate-in fade-in duration-500">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+          <LogIn className="h-6 w-6 text-primary" />
+        </div>
         <h2 className="text-2xl font-bold text-center text-foreground mb-6">
           Sign In to Maluda Anonymous
         </h2>
@@ -148,7 +151,6 @@ export default function SignInForm({ callbackUrl }: { callbackUrl: string }) {
               type="submit"
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
               disabled={isSubmitting}
-              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               {isSubmitting ? "Signing In..." : "Sign In"}
             </Button>

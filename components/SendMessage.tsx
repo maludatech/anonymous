@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, UserPlus } from "lucide-react";
+import { Send, UserPlus, MessageCircleHeart } from "lucide-react";
 import Link from "next/link";
 
 interface SendMessageProps {
@@ -79,7 +79,6 @@ export default function SendMessage({
             <Button
               asChild
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 hover:cursor-pointer"
-              style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
             >
               <Link href="/sign-up">
                 <UserPlus className="w-4 h-4" />
@@ -98,11 +97,14 @@ export default function SendMessage({
       ) : (
         <Card className="bg-card border border-border rounded-lg shadow-lg animate-in fade-in duration-500">
           <CardHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <MessageCircleHeart className="h-6 w-6 text-primary" />
+            </div>
             <CardTitle className="text-2xl font-bold text-foreground font-poppins">
-              Send a Secret Message to {username}
+              Send {username} an anonymous message
             </CardTitle>
             <p className="text-muted-foreground">
-              Write an anonymous message. Keep it fun and respectful! 💌
+              They won&apos;t see your name — keep it honest and respectful.
             </p>
           </CardHeader>
           <CardContent>
@@ -118,8 +120,7 @@ export default function SendMessage({
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 hover:cursor-pointer"
                 disabled={isSubmitting}
-                style={{ backgroundColor: "oklch(0.55 0.19 265.5)" }}
-              >
+                >
                 <Send className="w-4 h-4" />
                 {isSubmitting ? "Sending..." : "Send Message"}
               </Button>
