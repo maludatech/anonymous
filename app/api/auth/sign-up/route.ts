@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashedPassword = await hash(password, {
+    const hashedPassword = await hash(password.trim(), {
       memoryCost: 19456,
       timeCost: 2,
       outputLen: 32,

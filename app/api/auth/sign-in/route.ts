@@ -51,6 +51,7 @@ export const POST = async (request: NextRequest) => {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error("Sign-in error:", error.message);
     return NextResponse.json(
       { message: "Internal Server Error" },
       { status: 500 }

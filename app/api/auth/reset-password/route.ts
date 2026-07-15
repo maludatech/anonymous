@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     }
 
     // Update password
-    user.password = await hash(password, {
+    user.password = await hash(password.trim(), {
       memoryCost: 19456,
       timeCost: 2,
       outputLen: 32,
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error("Reset-password error:", error.message);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

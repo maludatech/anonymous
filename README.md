@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Maluda Anonymous
 
-## Getting Started
+An anonymous messaging platform built with Next.js. Users create an account and get a
+personal, shareable link (`/send-message/[username]`). Anyone with that link can send
+them a message without signing in or revealing who they are. The account owner reads and
+manages what comes in from a private dashboard.
 
-First, run the development server:
+## Features
+
+- **Account system** — email/username + password sign-up and sign-in, with password
+  reset via emailed token.
+- **Anonymous inbox** — a public `/send-message/[username]` page where anyone can send a
+  message to a user with no login required.
+- **Dashboard** — view and delete received messages, copy your shareable link.
+- **Profile management** — update account details from `/profile`.
+- **Transactional email** — welcome and password-reset emails sent via Resend
+  (`emails/` holds the React Email templates).
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org) (App Router) + React 19 + TypeScript
+- [MongoDB](https://www.mongodb.com/) via Mongoose for data storage
+- [`@node-rs/argon2`](https://github.com/napi-rs/node-rs) for password hashing,
+  [`jsonwebtoken`](https://github.com/auth0/node-jsonwebtoken) for session tokens
+- [Tailwind CSS 4](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com) (Radix
+  primitives) for the UI
+- [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev) for form
+  validation
+- [Resend](https://resend.com) + [React Email](https://react.email) for outbound email
+- [Zustand](https://zustand-demo.pmnd.rs/) for client-side auth state
+
+## Getting started
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure environment variables
+
+Create a `.env.local` file in the project root with:
+
+| Variable              | Required | Description                                              |
+| ---------------------- | -------- | ---------------------------------------------------------- |
+| `MONGODB_URI`          | Yes      | MongoDB connection string.                                |
+| `JWT_SECRET`           | Yes      | Secret used to sign/verify auth tokens.                   |
+| `RESEND_API_KEY`       | Yes      | API key for sending transactional email via Resend.       |
+| `NEXT_PUBLIC_APP_URL`  | Yes      | Public base URL of the app (used in emails and share links). |
+| `APP_NAME`             | No       | Overrides the display name used across the app.           |
+| `APP_SLOGAN`           | No       | Overrides the tagline shown on the landing page.           |
+| `DESCRIPTION`          | No       | Overrides the app description text.                        |
+
+### 3. Run the dev server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command         | Description                                  |
+| ---------------- | --------------------------------------------- |
+| `npm run dev`    | Start the Next.js dev server.                |
+| `npm run build`  | Build for production.                        |
+| `npm run start`  | Run the production build.                    |
+| `npm run lint`   | Run ESLint.                                  |
+| `npm run email`  | Preview email templates with React Email's dev server. |
 
-## Learn More
+## Deployment notes
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deployed on [Vercel](https://vercel.com). `@node-rs/argon2` is a native (compiled)
+dependency, so it's listed under `serverExternalPackages` in `next.config.ts` to keep
+Next.js from bundling it into the serverless function — bundling native addons can
+corrupt the binary and crash the function at runtime.
