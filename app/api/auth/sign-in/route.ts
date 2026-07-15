@@ -33,13 +33,18 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
     const token = jwt.sign(
       {
         userId: existingUser._id,
         email: existingUser.email,
         username: existingUser.username,
       },
-      process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD",
+      jwtSecret,
       { expiresIn: "3d" }
     );
 

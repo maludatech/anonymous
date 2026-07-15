@@ -27,12 +27,14 @@ export const DELETE = async (
       );
     }
     const token = authHeader.split(" ")[1];
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
     let decoded: JwtPayload;
     try {
-      decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD"
-      ) as JwtPayload;
+      decoded = jwt.verify(token, jwtSecret) as JwtPayload;
     } catch (error) {
       return NextResponse.json(
         { message: "Unauthorized: Invalid token" },

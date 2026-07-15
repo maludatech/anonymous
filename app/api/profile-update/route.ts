@@ -22,12 +22,14 @@ export const PATCH = async (req: NextRequest) => {
     }
 
     const token = authHeader.split(" ")[1];
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      throw new Error("JWT_SECRET is not configured");
+    }
+
     let decoded: TokenPayload;
     try {
-      decoded = verifyToken(
-        token,
-        process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD"
-      ) as TokenPayload;
+      decoded = verifyToken(token, jwtSecret) as TokenPayload;
     } catch (error) {
       return NextResponse.json(
         { message: "Invalid or expired token" },
@@ -75,7 +77,7 @@ export const PATCH = async (req: NextRequest) => {
     }
 
     // Hash new password
-    const hashedPassword = await hash(newPassword, {
+    const hashedPassword = await hash(newPassword.trim(), {
       memoryCost: 19456,
       timeCost: 2,
       outputLen: 32,
@@ -105,7 +107,7 @@ export const PATCH = async (req: NextRequest) => {
         fullName: updatedUser.fullName,
         countryOfResidence: updatedUser.countryOfResidence,
       },
-      process.env.JWT_SECRET || "3VLLagDOPe6UXMSWpDkYvPh0uWzDNBsD",
+      jwtSecret,
       { expiresIn: "3d" }
     );
 
@@ -121,6 +123,7 @@ export const PATCH = async (req: NextRequest) => {
       { status: 200 }
     );
   } catch (error: any) {
+    console.error("Profile-update error:", error.message);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 };

@@ -75,3 +75,20 @@ Deployed on [Vercel](https://vercel.com). `@node-rs/argon2` is a native (compile
 dependency, so it's listed under `serverExternalPackages` in `next.config.ts` to keep
 Next.js from bundling it into the serverless function — bundling native addons can
 corrupt the binary and crash the function at runtime.
+
+### Security
+
+- `next.config.ts` sets baseline security headers (CSP, `X-Frame-Options`,
+  `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) on every route.
+- All authenticated routes require a valid `Authorization: Bearer <token>` JWT signed
+  with `JWT_SECRET`; there is no hardcoded fallback secret, so `JWT_SECRET` **must** be
+  set in every environment or those routes will fail closed (500) rather than silently
+  using a known key.
+- **Rate limiting / abuse protection is handled at the platform level, not in app
+  code.** Configure the following in the Vercel dashboard under
+  Project → Security → Firewall:
+  - Enable **Attack Challenge Mode** to auto-throttle traffic spikes.
+  - Add rate-limit rules for `POST /api/auth/sign-in`, `POST /api/auth/sign-up`,
+    `POST /api/auth/forgot-password`, and `POST /api/messages/[username]` — these are
+    reachable with no authentication and are the endpoints most exposed to
+    credential-stuffing or message-spam abuse.
