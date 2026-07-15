@@ -42,7 +42,7 @@ interface DecodedToken {
 }
 
 const Profile = ({ callbackUrl }: ProfileProps) => {
-  const { user, isAuthenticated, login } = useAuthStore();
+  const { user, isAuthenticated, login, logout } = useAuthStore();
   const router = useRouter();
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -95,6 +95,13 @@ const Profile = ({ callbackUrl }: ProfileProps) => {
       clearTimeout(timeoutId);
 
       const data = await response.json();
+
+      if (response.status === 401) {
+        logout();
+        toast.error("Your session has expired. Please sign in again.");
+        router.push("/sign-in");
+        return;
+      }
 
       if (!response.ok) {
         toast.error(data.message || "Failed to update profile");

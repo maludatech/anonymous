@@ -27,8 +27,14 @@ interface Message {
 }
 
 const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
-  const { user, isAuthenticated, token } = useAuthStore();
+  const { user, isAuthenticated, token, logout } = useAuthStore();
   const router = useRouter();
+
+  const handleSessionExpired = useCallback(() => {
+    logout();
+    toast.error("Your session has expired. Please sign in again.");
+    router.push("/sign-in");
+  }, [logout, router]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [link, setLink] = useState("");
   const [copyText, setCopyText] = useState("Copy");
@@ -60,6 +66,8 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
+      } else if (response.status === 401) {
+        handleSessionExpired();
       } else {
         const error = await response.json();
         toast.error(error.message || "Failed to fetch messages.");
@@ -95,6 +103,12 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+        if (response.status === 401) {
+          handleSessionExpired();
+          setMessages(previousMessages);
+          return;
+        }
+
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || "Failed to delete message");
@@ -117,7 +131,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
         });
       }
     },
-    [messages, token, router, deletingIds]
+    [messages, token, router, deletingIds, handleSessionExpired]
   );
 
   // Copy link
