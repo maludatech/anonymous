@@ -38,7 +38,7 @@ export default function WelcomeEmail({ email, username }: WelcomeEmailProps) {
               Welcome to Maluda Anonymous, {username}!
             </Heading>
             <Text style={s.text}>
-              We're thrilled to have you join our community. Your account{" "}
+              We&apos;re thrilled to have you join our community. Your account{" "}
               <strong>{email}</strong> is ready to start sending and receiving
               anonymous messages.
             </Text>

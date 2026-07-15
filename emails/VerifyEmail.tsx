@@ -45,7 +45,7 @@ export default function VerifyEmail({
               Verify Email
             </a>
             <Text style={s.mutedText}>
-              This link expires in 24 hours. If you didn't create this
+              This link expires in 24 hours. If you didn&apos;t create this
               account, you can safely ignore this email.
             </Text>
             <Text style={s.footer}>

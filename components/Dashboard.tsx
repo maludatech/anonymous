@@ -1,7 +1,7 @@
 // app/components/Dashboard.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { toast } from "sonner";
@@ -26,6 +26,8 @@ interface Message {
   createdAt: string;
 }
 
+const PAGE_SIZE = 20;
+
 const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
   const { user, isAuthenticated, token, logout } = useAuthStore();
   const router = useRouter();
@@ -36,11 +38,52 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
     router.push("/sign-in");
   }, [logout, router]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [link, setLink] = useState("");
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [copyText, setCopyText] = useState("Copy");
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [openDialogId, setOpenDialogId] = useState<string | null>(null);
+
+  const link = useMemo(() => {
+    if (!user?.username) return "";
+    return `${process.env.NEXT_PUBLIC_APP_URL || "https://maluda-anonymous.vercel.app"}/send-message/${user.username}`;
+  }, [user?.username]);
+
+  // Fetch messages
+  const fetchMessages = useCallback(
+    async (skip = 0) => {
+      if (!user?.username) return;
+      skip === 0 ? setLoading(true) : setLoadingMore(true);
+      try {
+        const response = await fetch(
+          `/api/messages/${user.username}?limit=${PAGE_SIZE}&skip=${skip}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setMessages((prev) =>
+            skip === 0 ? data.messages : [...prev, ...data.messages]
+          );
+          setTotal(data.total);
+          setHasMore(data.hasMore);
+        } else if (response.status === 401) {
+          handleSessionExpired();
+        } else {
+          const error = await response.json();
+          toast.error(error.message || "Failed to fetch messages.");
+        }
+      } catch (error) {
+        toast.error("Error fetching messages.");
+        console.error("Fetch messages error:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [user, token, handleSessionExpired]
+  );
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -48,37 +91,14 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
       toast.error("Please sign in to access your dashboard.");
       router.push(callbackUrl);
     } else {
-      setLink(
-        `${process.env.NEXT_PUBLIC_APP_URL || "https://maluda-anonymous.vercel.app"}/send-message/${user.username}`
-      );
+      // Kicking off the initial data fetch on mount/auth-change; there's no
+      // external subscription to synchronize with here, just a one-shot load.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchMessages();
     }
-  }, [user, isAuthenticated, token, router, callbackUrl]);
+  }, [user, isAuthenticated, token, router, callbackUrl, fetchMessages]);
 
-  // Fetch messages
-  const fetchMessages = async () => {
-    if (!user?.username) return;
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/messages/${user.username}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
-      } else if (response.status === 401) {
-        handleSessionExpired();
-      } else {
-        const error = await response.json();
-        toast.error(error.message || "Failed to fetch messages.");
-      }
-    } catch (error) {
-      toast.error("Error fetching messages.");
-      console.error("Fetch messages error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const loadMore = () => fetchMessages(messages.length);
 
   // Delete message
   const deleteMessage = useCallback(
@@ -115,6 +135,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
         }
 
         toast.success("Message deleted successfully.");
+        setTotal((prev) => Math.max(prev - 1, 0));
       } catch (error: any) {
         console.error("Delete message error:", {
           messageId,
@@ -224,7 +245,7 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                   Your Inbox
                 </h2>
                 <span className="bg-pop text-pop-foreground text-xs font-bold px-2 py-1 rounded-full">
-                  {messages.length}
+                  {total}
                 </span>
               </div>
               {messages.map((message) => (
@@ -297,7 +318,20 @@ const Dashboard = ({ callbackUrl }: { callbackUrl: string }) => {
                 </Dialog>
               ))}
             </div>
-          ) : (
+          ) : null}
+          {!loading && messages.length > 0 && hasMore && (
+            <div className="flex justify-center pb-4">
+              <Button
+                variant="outline"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="text-foreground border-border"
+              >
+                {loadingMore ? "Loading..." : "Load more"}
+              </Button>
+            </div>
+          )}
+          {!loading && messages.length === 0 && (
             <Card className="bg-card border-border rounded-lg shadow-md text-center p-10 animate-in zoom-in">
               <CardContent className="flex flex-col items-center gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">

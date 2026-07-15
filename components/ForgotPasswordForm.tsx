@@ -37,7 +37,7 @@ export default function ForgotPasswordForm({
     if (isAuthenticated) {
       router.push(callbackUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, callbackUrl]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

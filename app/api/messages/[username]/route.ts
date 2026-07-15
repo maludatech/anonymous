@@ -50,15 +50,31 @@ export const GET = async (
       );
     }
 
+    const limitParam = parseInt(req.nextUrl.searchParams.get("limit") || "", 10);
+    const skipParam = parseInt(req.nextUrl.searchParams.get("skip") || "", 10);
+    const limit = Number.isFinite(limitParam)
+      ? Math.min(Math.max(limitParam, 1), 50)
+      : 20;
+    const skip = Number.isFinite(skipParam) ? Math.max(skipParam, 0) : 0;
+
     await connectToDb();
     const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const messages = await Message.find({
+    const filter = {
       receiver: { $regex: `^${escapedUsername}$`, $options: "i" },
-    }).sort({
-      createdAt: -1,
-    });
+    };
 
-    return NextResponse.json(messages, { status: 200 });
+    const [messages, total] = await Promise.all([
+      Message.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Message.countDocuments(filter),
+    ]);
+
+    return NextResponse.json(
+      { messages, total, hasMore: skip + messages.length < total },
+      { status: 200 }
+    );
   } catch (error: any) {
     console.error("Fetch messages error:", error.message);
     return NextResponse.json(

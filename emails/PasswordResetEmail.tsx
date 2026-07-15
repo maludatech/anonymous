@@ -43,7 +43,7 @@ export default function PasswordResetEmail({
               Reset Password
             </a>
             <Text style={s.mutedText}>
-              This link expires in 1 hour. If you didn't request this, you can
+              This link expires in 1 hour. If you didn&apos;t request this, you can
               safely ignore this email.
             </Text>
             <Text style={s.footer}>

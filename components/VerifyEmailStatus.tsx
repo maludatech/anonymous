@@ -12,15 +12,19 @@ export default function VerifyEmailStatus() {
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
   const token = searchParams.get("token");
-  const [status, setStatus] = useState<Status>("verifying");
-  const [message, setMessage] = useState("");
+  const linkIsInvalid = !email || !token;
+
+  const [status, setStatus] = useState<Status>(
+    linkIsInvalid ? "error" : "verifying"
+  );
+  const [message, setMessage] = useState(
+    linkIsInvalid ? "This verification link is invalid." : ""
+  );
 
   useEffect(() => {
-    if (!email || !token) {
-      setStatus("error");
-      setMessage("This verification link is invalid.");
-      return;
-    }
+    if (linkIsInvalid) return;
+
+    let cancelled = false;
 
     const verify = async () => {
       try {
@@ -33,16 +37,23 @@ export default function VerifyEmailStatus() {
         if (!response.ok) {
           throw new Error(data.message || "Verification failed");
         }
-        setStatus("success");
-        setMessage(data.message || "Email verified successfully.");
+        if (!cancelled) {
+          setStatus("success");
+          setMessage(data.message || "Email verified successfully.");
+        }
       } catch (error: any) {
-        setStatus("error");
-        setMessage(error.message || "Verification failed");
+        if (!cancelled) {
+          setStatus("error");
+          setMessage(error.message || "Verification failed");
+        }
       }
     };
 
     verify();
-  }, [email, token]);
+    return () => {
+      cancelled = true;
+    };
+  }, [email, token, linkIsInvalid]);
 
   return (
     <div className="flex justify-center items-center py-24 px-4">
