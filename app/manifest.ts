@@ -9,12 +9,18 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
-    theme_color: "#1D4ED8",
+    theme_color: "#6D28D9",
     icons: [
       {
-        src: "/assets/images/maluda-anonymous.png",
-        sizes: "1024x1024",
-        type: "image/jpeg",
+        src: "/icon.svg",
+        sizes: "any",
+        type: "image/svg+xml",
+        purpose: "any",
+      },
+      {
+        src: "/assets/images/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
         purpose: "any",
       },
     ],

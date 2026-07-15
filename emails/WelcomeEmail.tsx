@@ -9,6 +9,7 @@ import {
   Img,
   Preview,
 } from "@react-email/components";
+import { EMAIL_HEADER_DATA_URI } from "@/lib/email-assets";
 
 interface WelcomeEmailProps {
   email: string;
@@ -27,13 +28,14 @@ export default function WelcomeEmail({ email, username }: WelcomeEmailProps) {
       </Preview>
       <Body style={s.body}>
         <Container style={s.container}>
+          <Img
+            src={EMAIL_HEADER_DATA_URI}
+            alt="Maluda Anonymous — Say it. Stay anonymous."
+            width="520"
+            height="208"
+            style={s.banner}
+          />
           <Section style={s.card}>
-            <Img
-              src="https://res.cloudinary.com/dlnvweuhv/image/upload/w_300,q_auto/v1750542515/maluda-anonymous_xq8djd.jpg"
-              alt="Maluda Anonymous Logo"
-              width="150"
-              style={s.logo}
-            />
             <Heading style={s.heading}>
               Welcome to Maluda Anonymous, {username}!
             </Heading>
@@ -72,16 +74,20 @@ const s: Record<string, React.CSSProperties> = {
     margin: "40px auto",
     padding: "0 16px",
   },
+  banner: {
+    display: "block",
+    width: "100%",
+    maxWidth: "520px",
+    height: "auto",
+    borderRadius: "10px",
+    marginBottom: "16px",
+  },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: "10px",
     border: "1px solid #e4e4e7",
     padding: "40px 40px 32px",
     textAlign: "center",
-  },
-  logo: {
-    display: "block",
-    margin: "0 auto 24px",
   },
   heading: {
     color: "#111827",
