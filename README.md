@@ -67,7 +67,21 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run build`  | Build for production.                        |
 | `npm run start`  | Run the production build.                    |
 | `npm run lint`   | Run ESLint.                                  |
+| `npm run test`   | Run the integration test suite (see below).  |
 | `npm run email`  | Preview email templates with React Email's dev server. |
+
+## Testing
+
+Integration tests in `tests/` exercise the real API route handlers (sign-up, sign-in,
+email verification, and the message-inbox auth check) against a real MongoDB — no
+mocked database layer. They need a local MongoDB running and use a separate
+`anonymous_test` database by default so they never touch your dev data:
+
+```bash
+npm run test
+```
+
+Set `TEST_MONGODB_URI` to point tests at a different MongoDB instance if needed.
 
 ## Deployment notes
 
