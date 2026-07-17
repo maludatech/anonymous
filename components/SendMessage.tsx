@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Send, UserPlus, MessageCircleHeart } from "lucide-react";
+import { Send, UserPlus, MessageCircleHeart, Link2 } from "lucide-react";
 import Link from "next/link";
 
 interface SendMessageProps {
@@ -22,6 +23,10 @@ export default function SendMessage({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
+
+  const isOwnLink =
+    isAuthenticated && user?.username?.toLowerCase() === username.toLowerCase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +66,36 @@ export default function SendMessage({
     setIsSuccess(false); // Show form again
     setMessage("");
   };
+
+  if (isOwnLink) {
+    return (
+      <div className="w-full max-w-md mx-auto mt-6">
+        <Card className="bg-card border border-border rounded-lg shadow-lg animate-in fade-in duration-500">
+          <CardHeader>
+            <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Link2 className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-foreground font-poppins">
+              This is your own link
+            </CardTitle>
+            <p className="text-muted-foreground">
+              You&apos;re signed in as {username}, so you can&apos;t send
+              yourself a message here. Share this link with others instead —
+              head to your dashboard to copy it.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button
+              asChild
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 hover:cursor-pointer"
+            >
+              <Link href="/dashboard">Go to Dashboard</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
@@ -120,7 +155,7 @@ export default function SendMessage({
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-2 hover:cursor-pointer"
                 disabled={isSubmitting}
-                >
+              >
                 <Send className="w-4 h-4" />
                 {isSubmitting ? "Sending..." : "Send Message"}
               </Button>

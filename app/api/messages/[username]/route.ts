@@ -103,6 +103,29 @@ export const POST = async (
 
     const { message } = parsed.data;
 
+    // If the sender happens to be signed in as the recipient, block it —
+    // this can't be caught client-side alone since this endpoint takes no
+    // required auth (anonymous senders never send a token).
+    const authHeader = req.headers.get("authorization");
+    const jwtSecret = process.env.JWT_SECRET;
+    if (authHeader?.startsWith("Bearer ") && jwtSecret) {
+      try {
+        const decoded = jwt.verify(
+          authHeader.split(" ")[1],
+          jwtSecret
+        ) as JwtPayload;
+        if (decoded.username.toLowerCase() === username) {
+          return NextResponse.json(
+            { message: "You can't send a message to yourself." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // Invalid/expired token on an otherwise-anonymous endpoint — ignore
+        // and proceed as a normal anonymous sender.
+      }
+    }
+
     await connectToDb();
     const user = await User.findOne({ username });
 

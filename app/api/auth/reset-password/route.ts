@@ -3,7 +3,7 @@ import User from "@/models/Users";
 import PasswordResetToken from "@/models/PasswordResetTokens";
 import { connectToDb } from "@/lib/database";
 import crypto from "crypto";
-import { hash } from "@node-rs/argon2";
+import { hash, verify as verifyPassword } from "@node-rs/argon2";
 import { resetPasswordSchema, firstIssueMessage } from "@/lib/validation";
 
 export async function POST(request: Request) {
@@ -41,6 +41,15 @@ export async function POST(request: Request) {
       console.log(`Invalid or expired token for user: ${email.toLowerCase()}`);
       return NextResponse.json(
         { message: "Invalid or expired reset link" },
+        { status: 400 }
+      );
+    }
+
+    // Don't allow "resetting" to the same password
+    const isSamePassword = await verifyPassword(user.password, password.trim());
+    if (isSamePassword) {
+      return NextResponse.json(
+        { message: "New password must be different from your current password" },
         { status: 400 }
       );
     }
