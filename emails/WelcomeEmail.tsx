@@ -9,7 +9,6 @@ import {
   Img,
   Preview,
 } from "@react-email/components";
-import { EMAIL_HEADER_DATA_URI } from "@/lib/email-assets";
 
 interface WelcomeEmailProps {
   email: string;
@@ -17,7 +16,7 @@ interface WelcomeEmailProps {
 }
 
 const APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://maludaanonymous.com";
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://maluda-anonymous.vercel.app";
 
 export default function WelcomeEmail({ email, username }: WelcomeEmailProps) {
   return (
@@ -29,7 +28,7 @@ export default function WelcomeEmail({ email, username }: WelcomeEmailProps) {
       <Body style={s.body}>
         <Container style={s.container}>
           <Img
-            src={EMAIL_HEADER_DATA_URI}
+            src={`${APP_URL}/assets/images/email-header.png`}
             alt="Maluda Anonymous — Say it. Stay anonymous."
             width="520"
             height="208"

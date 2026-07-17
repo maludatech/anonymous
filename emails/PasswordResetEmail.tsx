@@ -9,12 +9,14 @@ import {
   Img,
   Preview,
 } from "@react-email/components";
-import { EMAIL_HEADER_DATA_URI } from "@/lib/email-assets";
 
 interface PasswordResetEmailProps {
   email: string;
   resetUrl: string;
 }
+
+const APP_URL =
+  process.env.NEXT_PUBLIC_APP_URL ?? "https://maluda-anonymous.vercel.app";
 
 export default function PasswordResetEmail({
   email,
@@ -29,7 +31,7 @@ export default function PasswordResetEmail({
       <Body style={s.body}>
         <Container style={s.container}>
           <Img
-            src={EMAIL_HEADER_DATA_URI}
+            src={`${APP_URL}/assets/images/email-header.png`}
             alt="Maluda Anonymous — Say it. Stay anonymous."
             width="520"
             height="208"
