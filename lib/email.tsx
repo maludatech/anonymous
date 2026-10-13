@@ -4,7 +4,7 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const SENDER_NAME = process.env.SENDER_NAME || "Maluda Anonymous";
-const SENDER_EMAIL = process.env.SENDER_EMAIL || "no-reply@driftfund.net";
+const SENDER_EMAIL = process.env.SENDER_EMAIL || "anonymous@maludatech.com";
 const FROM = `${SENDER_NAME} <${SENDER_EMAIL}>`;
 
 export async function sendResetEmail(email: string, resetUrl: string) {
